@@ -5,6 +5,7 @@ require "prototypes.entities.spawner"
 require "prototypes.entities.power"
 require "prototypes.items.unlocker"
 require "prototypes.recipes.override"
+require "prototypes.tiles.salt"
 
 local button_next = {
   type = "custom-input",
