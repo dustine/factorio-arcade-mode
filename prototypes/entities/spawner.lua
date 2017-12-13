@@ -7,7 +7,7 @@ data:extend {{
   type = "item-group",
   name = "arcade_mode-spawn",
   icon = "__ArcadeMode__/graphics/entities/spawner/base.png",
-  icon_size = 64,
+  icon_size = 32,
   order = "y"
 },{
   type = "item-subgroup",
