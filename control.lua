@@ -33,7 +33,8 @@ local function get_resources()
 end
 
 local function on_init()
-  global.counter = {}
+  log("init")
+  global.counter = global.counter or {}
   for _, force in pairs(game.forces) do
     global.counter[force.name] = 1
   end
@@ -41,7 +42,6 @@ local function on_init()
   get_resources()
 
   gui.init()
-
   for _, player in pairs(game.players) do
     gui.gui_init(player)
   end
@@ -160,14 +160,17 @@ local function on_unlocker(event, f)
 end
 
 script.on_event(defines.events.on_force_created, function(event)
+  if not counter then
+    global.counter = {}
+    counter = global.counter
+  end
   counter[event.force.name] = counter[event.force.name] or 1
 
-  -- TODO: is it 1?
 end)
 
-script.on_event(defines.events.on_forces_merging, function(event)
-  -- TODO
-end)
+-- script.on_event(defines.events.on_forces_merging, function(event)
+--   -- TODO
+-- end)
 
 script.on_event(defines.events.on_chunk_generated, function(event)
   local chunk = Chunk.from_position(Area.center(event.area))
