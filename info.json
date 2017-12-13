@@ -1,6 +1,6 @@
 {
     "name": "ArcadeMode",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "title": "Arcade Mode",
     "author": "Dustine",
     "dependencies": ["base >= 0.15.40"],
