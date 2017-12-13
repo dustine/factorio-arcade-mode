@@ -3,14 +3,26 @@ require("mod-gui")
 local gui = {}
 gui.version = 1
 
-function gui.init()
+function gui.on_init()
   if global.gui ~= nil then return end
   global.gui = {}
   global.gui.version = gui.version
 
+  for _, player in pairs(game.players) do
+    gui.gui_init(player)
+  end
+end
+
+function gui.on_configuration_changed()
+  -- reset gui
+  for _, player in pairs(game.players) do
+    gui.gui_init(player)
+  end
 end
 
 function gui.gui_init(player)
+  if not (player and player.valid) then return end
+
   local button_flow = mod_gui.get_button_flow(player)
   local button = button_flow["arcade_mode-gui-toggle-button"]
   if not button then
@@ -88,6 +100,10 @@ function gui.gui_init(player)
   end
 
   gui.gui_update(player)
+end
+
+function gui.on_player_created(player)
+  gui.gui_init(player)
 end
 
 function gui.gui_update(player)

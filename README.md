@@ -4,6 +4,7 @@ Based on [this suggested game mode/scenario](https://www.reddit.com/r/factorio/c
 
 ## To-Do
 
+- Isolate terrain gen into scenario
 - Remove ore/tree/rock/... spawning
 - Swap to infinity chests?
 - Clear/reset loaders and pumps when swapping recipe

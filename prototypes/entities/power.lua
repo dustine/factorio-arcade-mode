@@ -1,4 +1,4 @@
-local Prototype = require "scripts/prototype"
+local Prototype = require "prototypes/prototype"
 
 local pole = table.deepcopy(data.raw["electric-pole"]["small-electric-pole"])
 pole.name = "arcade_mode-power-pole"
