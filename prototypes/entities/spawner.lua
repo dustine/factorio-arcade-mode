@@ -7,6 +7,7 @@ data:extend {{
   type = "item-group",
   name = "arcade_mode-spawn",
   icon = "__ArcadeMode__/graphics/entities/spawner/base.png",
+  icon_size = 64,
   order = "y"
 },{
   type = "item-subgroup",
@@ -26,6 +27,7 @@ local display = {
   collision_box = {{-0.4, -0.4}, {0.4, 0.4}},
   selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
   selectable_in_game = false,
+  icon_size = 32,
   render_layer = "higher-object-above",
   flags = {"not-on-map"},
   icon = "__ArcadeMode__/graphics/entities/spawner/base.png",
