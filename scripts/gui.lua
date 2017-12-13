@@ -102,8 +102,8 @@ function gui.gui_init(player)
   gui.gui_update(player)
 end
 
-function gui.on_player_created(player)
-  gui.gui_init(player)
+function gui.on_player_created(event)
+  gui.gui_init(game.players[event.player_index])
 end
 
 function gui.gui_update(player)

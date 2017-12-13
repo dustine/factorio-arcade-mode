@@ -1,9 +1,9 @@
 {
     "name": "ArcadeMode",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "title": "Arcade Mode",
     "author": "Dustine",
-    "dependencies": ["base >= 0.16.00"],
+    "dependencies": ["base >= 0.16.0"],
     "description": "",
     "factorio_version": "0.16",
     "homepage": "https://github.com/dustine/factorio-arcade-mode"
