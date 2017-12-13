@@ -159,8 +159,8 @@ local function activate_spawner(base, player)
   local index = filter[player.index]
   local recipe_prototype = items[index] or fluids[index - #global.items]
   if not recipe_prototype or not recipe_prototype.valid then return false end
-  local recipe = player.force.recipes[recipe_prototype.name]
-  if not recipe or not recipe.valid then return false end
+  -- local recipe = player.force.recipes[recipe_prototype.name]
+  -- if not recipe or not recipe.valid then return false end
 
   if counter[base.force.name] > 0 and not base.active then
     local display = base.surface.find_entity("arcade_mode-spawner-display", base.position)
@@ -169,10 +169,10 @@ local function activate_spawner(base, player)
     base.active = true
     counter[base.force.name] = counter[base.force.name] - 1
 
-    base.recipe = recipe
+    base.set_recipe(recipe_prototype.name)
     return true
   elseif base.active then
-    base.recipe = recipe
+    base.set_recipe(recipe_prototype.name)
     return true
   end
   return false

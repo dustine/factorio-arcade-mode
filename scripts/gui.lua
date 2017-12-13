@@ -39,13 +39,13 @@ function gui.gui_init(player)
     local resource_table = frame.add {
       type = "table",
       name = "arcade_mode-gui-resource-table",
-      colspan = 1
+      column_count = 1
     }
 
     resource_table.add {
       type = "table",
       name = "arcade_mode-gui-item-resource-table",
-      colspan = 6
+      column_count = 6
     }
     -- resource_table.add {
     --   type = "label",
@@ -56,7 +56,7 @@ function gui.gui_init(player)
     resource_table.add {
       type = "table",
       name = "arcade_mode-gui-fluid-resource-table",
-      colspan = 6
+      column_count = 6
     }
   end
 
