@@ -30,7 +30,7 @@ function recipes.add_resource(resource)
   }
 
   if resource.type == "item" then
-    recipe.results[1].amount = data.raw[resource.type][resource.name].stack_size or 25
+    recipe.results[1].amount = data.raw[resource.type][resource.name].stack_size/2 or 25
   elseif resource.type == "fluid" then
     recipe.results[1].amount = 3000
   end
