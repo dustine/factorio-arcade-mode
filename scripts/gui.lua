@@ -21,9 +21,24 @@ function gui.on_configuration_changed()
 end
 
 function gui.gui_init(player)
+  log("wait, is this even running...?")
   if not (player and player.valid) then return end
 
   local button_flow = mod_gui.get_button_flow(player)
+
+  local best_button = button_flow["arcade_mode-gui-best-button"]
+  if not best_button then
+    best_button = button_flow.add {
+      type = "choose-elem-button",
+      elem_type = "item",
+      name = "arcade_mode-gui-best-button",
+      caption = "1",
+      sprite = "item-group/other",
+      style = mod_gui.button_style,
+    }
+    best_button.style.visible = true
+  end
+
   local button = button_flow["arcade_mode-gui-toggle-button"]
   if not button then
     button = button_flow.add {
@@ -78,24 +93,23 @@ function gui.gui_init(player)
   item_table.clear()
   fluid_table.clear()
 
-  for i, recipe in ipairs(global.items) do
-    local result = recipe.products[1].name
-    item_table.add {
+  for i, item in ipairs(global.resources.items) do
+    local a = item_table.add {
       type = "sprite-button",
       name = "arcade_mode-gui-select-"..i.."-button",
-      sprite =  "item/"..result,
+      sprite =  "item/"..item.name,
       style = mod_gui.button_style,
-      tooltip = recipe.localised_name
+      tooltip = item.localised_name
     }
+    a.style.vertical_align = "bottom"
   end
-  for i, recipe in ipairs(global.fluids) do
-    local result = recipe.products[1].name
+  for i, fluid in ipairs(global.resources.fluids) do
     fluid_table.add {
       type = "sprite-button",
-      name = "arcade_mode-gui-select-"..(i + #global.items).."-button",
-      sprite =  "fluid/"..result,
+      name = "arcade_mode-gui-select-"..(i + #global.resources.items).."-button",
+      sprite =  "fluid/"..fluid.name,
       style = mod_gui.button_style,
-      tooltip = recipe.localised_name
+      tooltip = fluid.localised_name
     }
   end
 
@@ -120,7 +134,7 @@ function gui.gui_update(player)
     button.sprite = "item-group/other"
     button.tooltip = {"gui-caption.arcade_mode-toggle-button"}
   else
-    local recipe = global.items[index] or global.fluids[index - #global.items]
+    local resource = global.resources.items[index] or global.resources.fluids[index - #global.items]
     button.sprite = recipe.products[1].type.."/"..recipe.products[1].name
     button.tooltip = {"gui-caption.arcade_mode-toggle-button-filtered", recipe.localised_name}
   end

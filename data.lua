@@ -1,10 +1,9 @@
 MOD = MOD or {}
 MOD.ArcadeMode = MOD.ArcadeMode or {}
 
-require "prototypes.entities.spawner"
-require "prototypes.entities.power"
+require "prototypes.entities.source"
 require "prototypes.items.unlocker"
-require "prototypes.recipes.override"
+-- require "prototypes.recipes.override"
 -- require "prototypes.tiles.salt"
 
 local button_next = {

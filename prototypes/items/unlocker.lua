@@ -32,7 +32,7 @@ local technology = {
   icon_size = 32,
   effects = {{
     type = "nothing",
-    effect_key = "technology-effect.arcade_mode-unlocker"
+    effect_description = "technology-effect.arcade_mode-unlocker"
   }},
   unit = {
     count_formula = "10*L",

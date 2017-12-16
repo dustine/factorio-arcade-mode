@@ -3,20 +3,12 @@ local Chunk = require('stdlib/area/chunk')
 local Area = require('stdlib/area/area')
 
 local arcade_gui = require("scripts/gui")
+local recipes = require("scripts/recipes/recipes")
 
 -- resets resources based on arcademode
 local function get_resources()
-  global.fluids = {}
-  global.items = {}
-
-  for name, recipe in pairs(game.recipe_prototypes) do
-    if name:match("arcade_mode%-spawn%-") then
-      if recipe.products[1].type == "fluid" then
-        table.insert(global.fluids, recipe)
-      else
-        table.insert(global.items, recipe)
-      end
-    end
+  if not global.custom_resources then
+    global.resources = recipes.getDefaultResources()
   end
 end
 

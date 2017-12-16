@@ -1,0 +1,1 @@
+return {"iron-ore", "copper-ore", "coal", "stone", "uranium-ore", "raw-fish", "raw-wood", "crude-oil", "water"}
