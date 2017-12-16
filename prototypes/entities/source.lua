@@ -12,7 +12,7 @@ local none = {
   icon = "__ArcadeMode__/graphics/entities/spawner/base.png",
   pictures = {{
     filename = "__ArcadeMode__/graphics/entities/source/off.png",
-    width = 32,
+    width = 32*3,
     height = 32,
   }},
 }

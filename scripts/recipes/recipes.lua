@@ -32,7 +32,7 @@ function recipes.formatResourceNames(items, fluids)
   recipes.sortResources(prototypes.items)
   recipes.sortResources(prototypes.fluids)
 
-  return prototypes
+  return prototypes.items, prototypes.fluids
 end
 
 function recipes.getDefaultResources()

@@ -8,7 +8,7 @@ local recipes = require("scripts/recipes/recipes")
 -- resets resources based on arcademode
 local function get_resources()
   if not global.custom_resources then
-    global.resources = recipes.getDefaultResources()
+    global.items, global.fluids = recipes.getDefaultResources()
   end
 end
 

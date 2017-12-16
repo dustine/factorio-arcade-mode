@@ -21,7 +21,6 @@ function gui.on_configuration_changed()
 end
 
 function gui.gui_init(player)
-  log("wait, is this even running...?")
   if not (player and player.valid) then return end
 
   local button_flow = mod_gui.get_button_flow(player)
@@ -74,12 +73,6 @@ function gui.gui_init(player)
       name = "arcade_mode-gui-item-resource-table",
       column_count = 6
     }
-    -- resource_table.add {
-    --   type = "label",
-    --   name = "arcade_mode-gui-resources-fluids-label",
-    --   caption = {"gui-caption.arcade_mode-gui-fluids-label"},
-    --   style = "caption_label_style"
-    -- }
     resource_table.add {
       type = "table",
       name = "arcade_mode-gui-fluid-resource-table",
@@ -93,7 +86,7 @@ function gui.gui_init(player)
   item_table.clear()
   fluid_table.clear()
 
-  for i, item in ipairs(global.resources.items) do
+  for i, item in ipairs(global.items) do
     local a = item_table.add {
       type = "sprite-button",
       name = "arcade_mode-gui-select-"..i.."-button",
@@ -103,10 +96,10 @@ function gui.gui_init(player)
     }
     a.style.vertical_align = "bottom"
   end
-  for i, fluid in ipairs(global.resources.fluids) do
+  for i, fluid in ipairs(global.fluids) do
     fluid_table.add {
       type = "sprite-button",
-      name = "arcade_mode-gui-select-"..(i + #global.resources.items).."-button",
+      name = "arcade_mode-gui-select-"..(i + #global.items).."-button",
       sprite =  "fluid/"..fluid.name,
       style = mod_gui.button_style,
       tooltip = fluid.localised_name
@@ -134,9 +127,16 @@ function gui.gui_update(player)
     button.sprite = "item-group/other"
     button.tooltip = {"gui-caption.arcade_mode-toggle-button"}
   else
-    local resource = global.resources.items[index] or global.resources.fluids[index - #global.items]
-    button.sprite = recipe.products[1].type.."/"..recipe.products[1].name
-    button.tooltip = {"gui-caption.arcade_mode-toggle-button-filtered", recipe.localised_name}
+    local resource, type
+    if index > #global.items then
+      type = "fluid"
+      resource = global.fluids[index - #global.items]
+    else
+      type = "item"
+      resource = global.items[index]
+    end
+    button.sprite = type.."/"..resource.name
+    button.tooltip = {"gui-caption.arcade_mode-toggle-button-filtered", resource.localised_name}
   end
 end
 

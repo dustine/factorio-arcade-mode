@@ -112,60 +112,40 @@ local function generate_spawner_chunk(event)
 
   -- set the stable bedrock
   local pavement = Area.construct(
-    area.left_top.x+0.1, area.left_top.y-0.1,
-    area.left_top.x+3.9, area.right_bottom.y-0.1
+    area.left_top.x, area.left_top.y,
+    area.left_top.x+4, area.right_bottom.y
   )
   local tiles = {}
   for x,y in Area.iterate(pavement) do
+    -- log(x)
+    -- log(x %32)
     if x % 32 == 3 then
       table.insert(tiles, {
-        name = "hazard-concrete",
+        name = "hazard-concrete-right",
         position = Position.construct(x, y)
       })
     else
-      table.insert(tiles, {
-        name = "concrete",
-        position = Position.construct(x, y)
-      })
+      -- table.insert(tiles, {
+      --   name = "concrete",
+      --   position = Position.construct(x, y)
+      -- })
     end
   end
   event.surface.set_tiles(tiles)
-  for _, entity in pairs(surface.find_entities {area = pavement}) do
+  for _, entity in pairs(surface.find_entities(pavement)) do
     entity.destroy()
   end
 
-  local iterator = Position.increment({area.left_top.x+0.5, area.left_top.y-0.5}, 0, 1)
+  local iterator = Position.increment({area.left_top.x+1.5, area.left_top.y-0.5}, 0, 1)
   for i=1,32 do
     local source = surface.create_entity {
-      name = "arcade_mode-item-source-display",
-      position = iterator(0, 0),
+      name = "arcade_mode-none-source",
+      position = iterator(),
       force = force
     }
     -- pole.operable = false
     source.destructible = false
     source.graphics_variation = 1
-  end
-
-  local source = surface.create_entity {
-    name = "arcade_mode-power-source",
-    position = start,
-    force = force
-  }
-  source.operable = false
-  source.destructible = false
-
-  -- then the poles/spawners
-  local iterator = Position.increment({area.left_top.x+0.5, area.left_top.y-0.5}, 0, 1)
-  for i=1,16 do
-    create_spawner(surface, iterator(), force)
-    create_spawner(surface, iterator(), force)
-    local pole = surface.create_entity {
-      name = "arcade_mode-power-pole",
-      position = iterator(0, 0),
-      force = force
-    }
-    pole.operable = false
-    pole.destructible = false
   end
 end
 
