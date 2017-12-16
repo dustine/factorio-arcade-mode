@@ -30,15 +30,9 @@ script.on_init(function()
       size = "none"
     }
   end
-  game.create_surface("anulus", settings)
 
+  game.create_surface("anulus", settings)
   game.forces.player.set_spawn_position({0,0}, "anulus")
-  for _, p in pairs(game.forces.player.players) do
-    p.teleport({0,0}, "anulus")
-  end
-  for c in game.surfaces.nauvis.get_chunks() do
-    game.surfaces.nauvis.delete_chunk(c)
-  end
 end)
 
 script.on_configuration_changed(function(event)
@@ -50,48 +44,6 @@ script.on_configuration_changed(function(event)
 end)
 
 --[[on_chunk_generated]]
-
--- local function create_spawner(surface, position, force)
---   local link_position = Position.translate(table.deepcopy(position), defines.direction.east, 1)
-
---   local display = surface.create_entity {
---     name = "arcade_mode-spawner-display",
---     position = position,
---     force = force
---   }
---   local base = surface.create_entity {
---     name = "arcade_mode-spawner-base",
---     position = position,
---     force = force,
---     direction = defines.direction.east
---   }
---   local link_pump = surface.create_entity {
---     name = "arcade_mode-spawner-pump",
---     position = link_position,
---     force = force,
---     direction = defines.direction.east
---   }
---   local link_loader = surface.create_entity {
---     name = "arcade_mode-spawner-loader",
---     position = link_position,
---     force = force,
---     direction = defines.direction.east,
---     type = "output"
---   }
-
---   -- base.teleport(base.position)
-
---   base.active = false
---   base.operable = false
---   base.rotatable = false
---   base.destructible = false
---   display.destructible = false
---   display.graphics_variation = 1
---   link_pump.operable = false
---   link_pump.destructible = false
---   link_loader.operable = false
---   link_loader.destructible = false
--- end
 
 local function generate_empty_chunk(event)
   -- clean off!
@@ -139,7 +91,7 @@ local function generate_spawner_chunk(event)
   local iterator = Position.increment({area.left_top.x+1.5, area.left_top.y-0.5}, 0, 1)
   for i=1,32 do
     local source = surface.create_entity {
-      name = "arcade_mode-none-source",
+      name = "arcade_mode-source_none",
       position = iterator(),
       force = force
     }

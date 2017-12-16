@@ -1,8 +1,8 @@
 MOD = MOD or {}
 MOD.ArcadeMode = MOD.ArcadeMode or {}
 
-require "prototypes.entities.source"
-require "prototypes.items.unlocker"
+require "prototypes.source"
+require "prototypes.unlocker"
 -- require "prototypes.recipes.override"
 -- require "prototypes.tiles.salt"
 
