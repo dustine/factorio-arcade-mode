@@ -28,7 +28,7 @@ function gui.gui_init(player)
   local best_button = button_flow["arcade_mode-gui-best-button"]
   if not best_button then
     best_button = button_flow.add {
-      type = "choose-elem-button",
+      type = "button",
       elem_type = "item",
       name = "arcade_mode-gui-best-button",
       caption = "1",
@@ -38,14 +38,14 @@ function gui.gui_init(player)
     best_button.style.visible = true
   end
 
-  local button = button_flow["arcade_mode-gui-toggle-button"]
+  local button = button_flow["arcade_mode-gui_button-toggle"]
   if not button then
     button = button_flow.add {
       type = "sprite-button",
-      name = "arcade_mode-gui-toggle-button",
+      name = "arcade_mode-gui_button-toggle",
       sprite = "item-group/other",
       style = mod_gui.button_style,
-      tooltip = {"gui-caption.arcade_mode-toggle-button"}
+      tooltip = {"gui-caption.arcade_mode-toggle"}
     }
     button.style.visible = true
   end
@@ -55,49 +55,66 @@ function gui.gui_init(player)
   if not frame then
     frame = frame_flow.add {
       type = "frame",
-      name = "arcade_mode-gui-frame",
+      name = "arcade_mode-gui_frame",
       direction = "vertical",
       caption = {"gui-caption.arcade_mode-frame"},
       style = mod_gui.frame_style
     }
     frame.style.visible = false
-
-    local resource_table = frame.add {
+    frame.add {
       type = "table",
-      name = "arcade_mode-gui-resource-table",
-      column_count = 1
+      name = "arcade_mode-gui_table-resources",
+      column_count = 6,
+      style = "slot_table"
+    }
+    frame.add {
+      type = "label",
+      name = "arcade_mode-gui_label-modes",
+      caption = {"gui-caption.arcade_mode-modes"},
+      style = "caption_label"
     }
 
-    resource_table.add {
-      type = "table",
-      name = "arcade_mode-gui-item-resource-table",
-      column_count = 6
+    local modes = frame.add {
+      type = "flow",
+      name = "arcade_mode-gui_table-modes",
+      caption = {"gui-caption.arcade_mode-modes-2"},
+      -- style = "caption_label"
+      direction = "horizontal"
     }
-    resource_table.add {
-      type = "table",
-      name = "arcade_mode-gui-fluid-resource-table",
-      column_count = 6
+
+    modes.add {
+      type = "button",
+      name = "arcade_mode-gui_button-upgrade-toggle",
+      caption = {"gui-caption.arcade_mode-upgrade-toggle"},
+    }
+    modes.add {
+      type = "sprite-button",
+      name = "arcade_mode-gui_button-unlocker",
+      caption = {"gui-caption.arcade_mode-unlocker"},
+      sprite = {"item/arcade_mode-unlocker"}
+    }
+    modes.add {
+      type = "button",
+      name = "arcade_mode-gui_button-options",
+      caption = {"gui-caption.arcade_mode-options"},
     }
   end
 
-  local resource_table = frame["arcade_mode-gui-resource-table"]
-  local item_table = resource_table["arcade_mode-gui-item-resource-table"]
-  local fluid_table = resource_table["arcade_mode-gui-fluid-resource-table"]
-  item_table.clear()
-  fluid_table.clear()
+  local resource_table = frame["arcade_mode-gui_table-resources"]
+  resource_table.clear()
 
   for i, item in ipairs(global.items) do
-    local a = item_table.add {
+    local a = resource_table.add {
       type = "sprite-button",
-      name = "arcade_mode-gui-select-"..i.."-button",
-      sprite =  "item/"..item.name,
+      name = "arcade_mode-gui_button-select-"..i,
+      sprite = "item/"..item.name,
       style = mod_gui.button_style,
       tooltip = item.localised_name
     }
     a.style.vertical_align = "bottom"
   end
   for i, fluid in ipairs(global.fluids) do
-    fluid_table.add {
+    resource_table.add {
       type = "sprite-button",
       name = "arcade_mode-gui-select-"..(i + #global.items).."-button",
       sprite =  "fluid/"..fluid.name,
@@ -117,13 +134,16 @@ function gui.gui_update(player)
   local button_flow = mod_gui.get_button_flow(player)
   local button = button_flow["arcade_mode-gui-toggle-button"]
 
-  local index = global.filter[player.index]
-  if not index or index > #global.items + #global.fluids then
-    global.filter[player.index] = 1
-    index = global.filter[player.index]
-  end
+  if not button then return end
 
-  if not index then
+  local filter = global.filter[player.index]
+  local index = filter.index
+  -- if not index or index > #global.items + #global.fluids then
+  --   global.filter[player.index].index = 1
+  --   index = global.filter[player.index]
+  -- end
+
+  if not index or index > #global.items + #global.fluids then
     button.sprite = "item-group/other"
     button.tooltip = {"gui-caption.arcade_mode-toggle-button"}
   else

@@ -1,25 +1,25 @@
+MOD = {}
+MOD.name = "ArcadeMode"
+MOD.if_name = "arcade_mode"
+MOD.interfaces = {}
+MOD.commands = {}
+-- MOD.config = require "control.config"
+
 local Position = require('stdlib/area/position')
 local Chunk = require('stdlib/area/chunk')
 local Area = require('stdlib/area/area')
 
 local arcade_gui = require("scripts/gui")
-local recipes = require("scripts/recipes/recipes")
+local filters = require("scripts/filters")
 
--- resets resources based on arcademode
-local function get_resources()
-  if not global.custom_resources then
-    global.items, global.fluids = recipes.getDefaultResources()
-  end
-end
 
 script.on_init(function()
   global.counter = global.counter or {}
   for _, force in pairs(game.forces) do
     global.counter[force.name] = 1
   end
-  global.filter = {}
-  get_resources()
 
+  filters.on_init()
   arcade_gui.on_init()
 end)
 
@@ -28,6 +28,7 @@ script.on_configuration_changed(function(event)
 
   arcade_gui.on_configuration_changed(event)
 end)
+
 
 --[[on_player_selected_area + alt]]
 
@@ -137,8 +138,9 @@ local function cycle_resource(player, quantity)
 
   -- 1-indexiiiing *shakes fists*
   filter.index = (filter.index + quantity - 1) % (#global.items + #global.fluids) + 1
+  log((filter.index + quantity - 1) % (#global.items + #global.fluids) + 1)
   if filter.index > #global.items then
-    filter.kind = "fluid/"..global.fluids[filter.index].name
+    filter.kind = "fluid/"..global.fluids[filter.index - #global.items].name
   else
     filter.kind = "item/"..global.items[filter.index].name
   end
@@ -192,19 +194,6 @@ end)
 
 script.on_event(defines.events.on_gui_click, arcade_gui.on_gui_click)
 
-local function DEBUG_place_fluid_source(entity, agent)
-  agent = game.players[agent]
+-- [[interfaces]]
 
-  if entity.name == "wooden-chest" then
-    local surface = entity.surface
-    local position = entity.position
-    entity.destroy()
-    surface.create_entity {
-      name = "arcade_mode-source_fluid-water",
-      position = position,
-      force = agent.force
-    }
-  end
-end
-
-script.on_event(defines.events.on_built_entity, DEBUG_place_fluid_source)
+remote.add_interface(MOD.if_name, MOD.interfaces)
