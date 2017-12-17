@@ -31,54 +31,59 @@ end)
 
 --[[on_player_selected_area + alt]]
 
-local function get_item_source_components(surface, position)
-  local components = {}
+local function get_source_components(source)
+  if source.type ~= "item" then return end
 
-  for _, entity in pairs(surface.find_entities(Area.construct(
+  local position = source.main.position
+  source.components = {}
+
+  for _, entity in pairs(source.main.surface.find_entities(Area.construct(
     position.x-1, position.y, position.x+1, position.y))) do
     local subtype = entity.name:match("arcade_mode%-source_item%-(.*)&")
     if subtype then
-      components[subtype] = entity
+      source.components[subtype] = entity
     end
   end
-
-  return components
 end
 
-local function destroy_source(source, type)
-  type = type or source.name:match("arcade_mode%-source_([^_%-]+)&")
-  if not type then return end
-
-  if type == "item" then
-    for _, e in pairs(get_item_source_components(source.surface, source)) do
-      e.destroy()
-    end
+local function destroy_source(source)
+  if source.components then
+    for _, e in pairs(source.components) do e.destroy() end
   end
   source.destroy()
 end
 
 -- changes a source's target (replacing it with a proper type as needed)
 local function change_source(source, new_type, target)
-  local cost = 0
-  local type = source.name:match("arcade_mode%-source_([^_%-]+)&")
-  if type == new_type then
+  if source.type == new_type then
     -- for type == none, just leave it be
     if not target then return end
-    cost = set_source_target(source, target) or 0
+    set_source_target(source, target)
   else
     -- recreation time
     local position = source.position
     destroy_source(source, type)
     create_source(new_type, position, target)
   end
+end
 
-  return cost
+local function build_source(entity)
+  local type = entity.name:match("arcade_mode%-source_([^%-]+)&")
+  if not type then return end
+  local source = {
+    main = entity,
+    type = type
+  }
+  get_source_components(source)
+
+  return source
 end
 
 script.on_event(defines.events.on_player_selected_area, function(event)
   if not event.item == "arcade_mode-unlocker" then return end
   local player = game.players[event.player_index]
   local force = player.force.name
+  -- local credits = 
 
   local index = global.filter[player.index]
   local recipe = global.items[index] or global.fluids[index - #global.items]
@@ -86,17 +91,10 @@ script.on_event(defines.events.on_player_selected_area, function(event)
   if not recipe or not recipe.valid then return end
 
   for _, entity in pairs(event.entities) do
-    if entity.name:match("arcade_mode%-spawner%-base") then
-      if global.counter[force] > 0 and not entity.active then
-        local display = entity.surface.find_entity("arcade_mode-spawner-display", entity.position)
-        if display then display.graphics_variation = 2 end
-        entity.active = true
-        global.counter[force] = global.counter[force] - 1
-        entity.set_recipe(recipe.name)
-        flush_spawner(entity)
-      elseif entity.active then
-        entity.set_recipe(recipe.name)
-        flush_spawner(entity)
+    if entity.name:match("arcade_mode%-source_([^%-]+)&") then
+      local source = build_source(entity)
+      if source then
+
       end
     end
   end
@@ -178,8 +176,8 @@ script.on_event(defines.events.on_player_created, function(event)
 end)
 
 script.on_event(defines.events.on_force_created, function(event)
-  if not global.counter then 
-    log("Force-creating global.counter"); global.counter = {} 
+  if not global.counter then
+    log("Force-creating global.counter"); global.counter = {}
   end
   local force = event.force.name
   global.counter[force] = global.counter[force] or 1
@@ -193,3 +191,20 @@ script.on_event(defines.events.on_research_finished, function(event)
 end)
 
 script.on_event(defines.events.on_gui_click, arcade_gui.on_gui_click)
+
+local function DEBUG_place_fluid_source(entity, agent)
+  agent = game.players[agent]
+
+  if entity.name == "wooden-chest" then
+    local surface = entity.surface
+    local position = entity.position
+    entity.destroy()
+    surface.create_entity {
+      name = "arcade_mode-source_fluid-water",
+      position = position,
+      force = agent.force
+    }
+  end
+end
+
+script.on_event(defines.events.on_built_entity, DEBUG_place_fluid_source)

@@ -6,10 +6,10 @@ local none = {
   collision_box = {{-1.4, -0.4}, {1.4, 0.4}},
   selection_box = {{-1.5, -0.5}, {1.5, 0.5}},
   -- selectable_in_game = false,
+  icon = "__ArcadeMode__/graphics/source/icon-none.png",
   icon_size = 32,
   render_layer = "higher-object-above",
   flags = {"player-creation"},
-  icon = "__ArcadeMode__/graphics/spawner/base.png",
   pictures = {{
     filename = "__ArcadeMode__/graphics/source/off.png",
     width = 32*3,
@@ -17,9 +17,11 @@ local none = {
   }},
 }
 
-local base = {
+local chest = {
   type = "infinity-container",
-  name = "arcade_mode-source_item-base",
+  icon = "__ArcadeMode__/graphics/source/icon-item-container.png",
+  icon_size = 32,
+  name = "arcade_mode-source_item-container",
   flags = {"not-on-map", "player-creation"},
   collision_box = {{-0.4, -0.4}, {0.4, 0.4}},
   selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
@@ -28,20 +30,35 @@ local base = {
   erase_contents_when_mined = true,
   inventory_size = 1,
   -- selectable_in_game = false,
-  picture = {
-    filename = "__ArcadeMode__/graphics/spawner/base.png",
-    priority = "high",
-    width = 32,
-    height = 32,
-  },
+  picture = Prototype.empty_sprite(),
 }
 
-data:extend{none, base}
+local item = {
+  type = "item",
+  name = "arcade_mode-source",
+  flags = {},
+  icon = "__ArcadeMode__/graphics/source/icon-item.png",
+  icon_size = 32,
+  place_result = "arcade_mode-source_none",
+  stack_size = 1,
+}
+
+data:extend{none, chest, item}
 
 local function generate_loader(index, speed, color)
+  color = util.color(color)
+  
   local loader = table.deepcopy(data.raw.loader["express-loader"])
   loader.name = "arcade_mode-source_item-loader_"..index
   loader.flags = {"not-on-map", "player-creation"}
+  loader.icon = nil
+  loader.icons = {{
+    icon = "__ArcadeMode__/graphics/source/icon-item-loader.png",
+    width = 32,
+    height = 32,
+    tint = color
+  }}
+  loader.icon_size = 32
   loader.minable = nil
   loader.selectable_in_game = false
   loader.structure.direction_in = {
@@ -71,7 +88,7 @@ local function generate_loader(index, speed, color)
     icon_size = 32,
     render_layer = "higher-object-above",
     flags = {"player-creation"},
-    icon = "__ArcadeMode__/graphics/spawner/base.png",
+    icon = "__ArcadeMode__/graphics/source/icon-item.png",
     pictures = {},
   }
 
@@ -80,12 +97,11 @@ local function generate_loader(index, speed, color)
       filename = "__ArcadeMode__/graphics/source/item.png",
       width = 32,
       height = 32,
-      tint = util.color(color)
     },{
       filename = "__ArcadeMode__/graphics/source/item-tint.png",
       width = 32,
       height = 32,
-      tint = util.color(color)
+      tint = color
     }}
   }
 
@@ -100,7 +116,7 @@ local function generate_fluid_source(fluid)
   source.fluid = fluid.name
   source.collision_box = {{-0.4, -0.4}, {0.4, 0.4}}
   source.selection_box = {{-0.5, -0.5}, {0.5, 0.5}}
-  source.icon = "__ArcadeMode__/graphics/spawner/base.png"
+  source.icon = "__ArcadeMode__/graphics/source/icon-fluid.png"
   source.circuit_wire_max_distance = 0
   source.picture = {
     layers = {{
