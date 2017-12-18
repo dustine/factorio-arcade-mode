@@ -2,26 +2,35 @@ local Prototype = {}
 
 --Quick to use empty sprite
 function Prototype.empty_sprite()
-    return {
-        filename = "__core__/graphics/empty.png",
-        priority = "extra-high",
-        width = 1,
-        height = 1
-    }
+  return {
+    filename = "__core__/graphics/empty.png",
+    priority = "extra-high",
+    width = 1,
+    height = 1
+  }
 end
 
 --Quick to use empty animation
 function Prototype.empty_animation()
-    return {
-        filename = Prototype.empty_sprite().filename,
-        width = Prototype.empty_sprite().width,
-        height = Prototype.empty_sprite().height,
-        line_length = 1,
-        frame_count = 1,
-        shift = {0, 0},
-        animation_speed = 1,
-        direction_count=1
-    }
+  return {
+    filename = Prototype.empty_sprite().filename,
+    width = Prototype.empty_sprite().width,
+    height = Prototype.empty_sprite().height,
+    line_length = 1,
+    frame_count = 1,
+    shift = {0, 0},
+    animation_speed = 1,
+    direction_count = 1
+  }
+end
+
+function Prototype.empty_sheet()
+  return {
+    north = Prototype.empty_sprite(),
+    east = Prototype.empty_sprite(),
+    south = Prototype.empty_sprite(),
+    west = Prototype.empty_sprite(),
+  }
 end
 
 -- render layers

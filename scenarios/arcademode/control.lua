@@ -14,7 +14,7 @@ script.on_init(function()
   global.version = version
   silo_script.on_init()
 
-  local blacklist = {"coal", "copper-ore", "crude-oil", "iron-ore", "stone", "trees", "uranium-ore"}
+  local blacklist = {"trees"}
   local settings = {
     autoplace_controls = {},
     seed = game.surfaces.nauvis.map_gen_settings.seed,
@@ -65,22 +65,20 @@ local function generate_spawner_chunk(event)
   -- set the stable bedrock
   local pavement = Area.construct(
     area.left_top.x, area.left_top.y,
-    area.left_top.x+4, area.right_bottom.y
+    area.left_top.x+3, area.right_bottom.y
   )
   local tiles = {}
   for x,y in Area.iterate(pavement) do
-    -- log(x)
-    -- log(x %32)
     if x % 32 == 3 then
       table.insert(tiles, {
         name = "hazard-concrete-right",
         position = Position.construct(x, y)
       })
     else
-      -- table.insert(tiles, {
-      --   name = "concrete",
-      --   position = Position.construct(x, y)
-      -- })
+      table.insert(tiles, {
+        name = "concrete",
+        position = Position.construct(x, y)
+      })
     end
   end
   event.surface.set_tiles(tiles)
@@ -88,16 +86,16 @@ local function generate_spawner_chunk(event)
     entity.destroy()
   end
 
-  local iterator = Position.increment({area.left_top.x+1.5, area.left_top.y-0.5}, 0, 1)
+  local iterator = Position.increment({area.left_top.x+2.5, area.left_top.y-0.5}, 0, 1)
   for i=1,32 do
     local source = surface.create_entity {
-      name = "arcade_mode-source_none",
+      name = "arcade_mode-source",
       position = iterator(),
       force = force
     }
     -- pole.operable = false
     source.destructible = false
-    source.graphics_variation = 1
+    script.raise_event(defines.events.script_raised_built, {entity = source})
   end
 end
 
@@ -120,6 +118,7 @@ script.on_event(defines.events.on_player_created, function(event)
   player.insert{name="firearm-magazine", count = 10}
   player.insert{name="stone-furnace", count = 1}
   player.insert{name="arcade_mode-unlocker", count = 1}
+  player.insert{name="arcade_mode-source", count = 10}
 
   if (#game.players <= 1) then
     game.show_message_dialog{text = {"msg-intro"}}

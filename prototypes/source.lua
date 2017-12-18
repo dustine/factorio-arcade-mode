@@ -1,23 +1,23 @@
 local Prototype = require "prototypes/prototype"
 
-local none = {
-  type = "simple-entity-with-force",
-  name = "arcade_mode-source_none",
-  collision_box = {{-1.4, -0.4}, {1.4, 0.4}},
-  selection_box = {{-1.5, -0.5}, {1.5, 0.5}},
-  -- selectable_in_game = false,
-  icon = "__ArcadeMode__/graphics/source/icon-none.png",
-  icon_size = 32,
-  render_layer = "higher-object-above",
-  flags = {"player-creation"},
-  pictures = {{
-    filename = "__ArcadeMode__/graphics/source/off.png",
-    width = 32*3,
-    height = 32,
-  }},
+local base = table.deepcopy(data.raw["constant-combinator"]["constant-combinator"])
+base.name = "arcade_mode-source"
+base.icon = "__ArcadeMode__/graphics/source/icon-item.png"
+base.minable = {mining_time = 1, result = "arcade_mode-source"}
+base.collision_box = {{-2.4, -0.4}, {0.5, 0.4}}
+base.selection_box = {{-2.5, -0.5}, {0.5, 0.5}}
+base.collision_mask = {"player-layer"}
+base.item_slot_count = 6
+base.circuit_wire_max_distance = 0
+base.sprites = {
+  filename = "__ArcadeMode__/graphics/source/icon-item.png",
+  width = 32,
+  height = 32,
+  direction_count = 1
 }
+base.activity_led_sprites = Prototype.empty_sprite()
 
-local chest = {
+local container = {
   type = "infinity-container",
   icon = "__ArcadeMode__/graphics/source/icon-item-container.png",
   icon_size = 32,
@@ -36,19 +36,19 @@ local chest = {
 local item = {
   type = "item",
   name = "arcade_mode-source",
-  flags = {},
+  flags = {"goes-to-quickbar", "hidden"},
   icon = "__ArcadeMode__/graphics/source/icon-item.png",
   icon_size = 32,
-  place_result = "arcade_mode-source_none",
+  place_result = "arcade_mode-source",
   stack_size = 1,
 }
 
-data:extend{none, chest, item}
+data:extend{base, container, item}
 
 local function generate_loader(index, speed, color)
   color = util.color(color)
-  
-  local loader = table.deepcopy(data.raw.loader["express-loader"])
+
+  local loader = table.deepcopy(data.raw.loader["loader"])
   loader.name = "arcade_mode-source_item-loader_"..index
   loader.flags = {"not-on-map", "player-creation"}
   loader.icon = nil
@@ -61,52 +61,23 @@ local function generate_loader(index, speed, color)
   loader.icon_size = 32
   loader.minable = nil
   loader.selectable_in_game = false
-  loader.structure.direction_in = {
-    north = Prototype.empty_sprite(),
-    east = Prototype.empty_sprite(),
-    south = Prototype.empty_sprite(),
-    west = Prototype.empty_sprite(),
-  }
-  loader.structure.direction_out = {
-    north = Prototype.empty_sprite(),
-    east = Prototype.empty_sprite(),
-    south = Prototype.empty_sprite(),
-    west = Prototype.empty_sprite(),
+  loader.structure.direction_in = Prototype.empty_sheet()
+  loader.structure.direction_out = Prototype.empty_sheet()
+  loader.structure.direction_in.east = {
+    filename = "__ArcadeMode__/graphics/source/item-tint.png",
+    width = 96,
+    height = 32,
+    tint = color
   }
   loader.fast_replaceable_group = "arcade_mode-source_item-loader"
   loader.speed = speed or data.raw["transport-belt"]["transport-belt"].speed
 
-  data:extend{none, loader}
-
-  local display = data.raw["simple-entity-with-force"]["arcade_mode-source_item"] or {
-    type = "simple-entity-with-force",
-    name = "arcade_mode-source_item",
-    collision_box = {{-1.4, -0.4}, {1.4, 0.4}},
-    selection_box = {{-1.5, -0.5}, {1.5, 0.5}},
-    collision_mask = {"ground-tile", "player-layer"},
-    -- selectable_in_game = false,
-    icon_size = 32,
-    render_layer = "higher-object-above",
-    flags = {"player-creation"},
-    icon = "__ArcadeMode__/graphics/source/icon-item.png",
-    pictures = {},
-  }
-
-  display.pictures[index] = {
-    layers = {{
-      filename = "__ArcadeMode__/graphics/source/item.png",
-      width = 32,
-      height = 32,
-    },{
-      filename = "__ArcadeMode__/graphics/source/item-tint.png",
-      width = 32,
-      height = 32,
-      tint = color
-    }}
-  }
-
-  if not data.raw["simple-entity-with-force"]["arcade_mode-source_item"] then data:extend{display} end
+  data:extend{loader}
 end
+
+generate_loader(1, data.raw["transport-belt"]["transport-belt"].speed, "ff0")
+generate_loader(2, data.raw["transport-belt"]["fast-transport-belt"].speed, "f00")
+generate_loader(3, data.raw["transport-belt"]["express-transport-belt"].speed, "00f")
 
 local function generate_fluid_source(fluid)
   local source = table.deepcopy(data.raw["offshore-pump"]["offshore-pump"])
@@ -125,7 +96,7 @@ local function generate_fluid_source(fluid)
       height = 32,
     }, {
       filename = "__ArcadeMode__/graphics/source/fluid-tint.png",
-      width = 32*3,
+      width = 96,
       height = 32,
       tint = fluid.base_color
     }}
@@ -137,7 +108,3 @@ end
 
 MOD.ArcadeMode.generate_loader = generate_loader
 MOD.ArcadeMode.generate_fluid_source = generate_fluid_source
-
-generate_loader(1, data.raw["transport-belt"]["transport-belt"].speed, "ff0")
-generate_loader(2, data.raw["transport-belt"]["fast-transport-belt"].speed, "f00")
-generate_loader(3, data.raw["transport-belt"]["express-transport-belt"].speed, "00f")

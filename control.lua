@@ -9,7 +9,7 @@ local Position = require('stdlib/area/position')
 local Chunk = require('stdlib/area/chunk')
 local Area = require('stdlib/area/area')
 
-local arcade_gui = require("scripts/gui")
+local source_gui = require("scripts/source-gui")
 local filters = require("scripts/filters")
 
 
@@ -19,16 +19,28 @@ script.on_init(function()
     global.counter[force.name] = 1
   end
 
+  global.sources = {}
+
   filters.on_init()
-  arcade_gui.on_init()
+  -- arcade_gui.on_init()
+  source_gui.on_init()
 end)
 
 script.on_configuration_changed(function(event)
-  get_resources()
-
-  arcade_gui.on_configuration_changed(event)
+  -- filters.on_configuration_changed(event)
+  -- arcade_gui.on_configuration_changed(event)
 end)
 
+
+local function on_script_raised_built(event)
+  if event.entity and event.entity.valid and event.entity.name == "arcade_mode-source" then
+    -- register source
+    local source_info = {}
+    global.sources[event.entity.unit_number] = source_info
+  end
+end
+
+script.on_event(defines.events.script_raised_built, on_script_raised_built)
 
 --[[on_player_selected_area + alt]]
 
@@ -68,7 +80,7 @@ local function change_source(source, new_type, target)
   end
 end
 
-local function build_source(entity)
+local function get_source(entity)
   local type = entity.name:match("arcade_mode%-source_([^%-]+)&")
   if not type then return end
   local source = {
@@ -82,21 +94,20 @@ end
 
 script.on_event(defines.events.on_player_selected_area, function(event)
   if not event.item == "arcade_mode-unlocker" then return end
+
   local player = game.players[event.player_index]
   local force = player.force.name
-  -- local credits = 
 
-  local index = global.filter[player.index]
+  local filter = global.filter[player.index]
+  local index = filter.index
   local recipe = global.items[index] or global.fluids[index - #global.items]
 
   if not recipe or not recipe.valid then return end
 
   for _, entity in pairs(event.entities) do
-    if entity.name:match("arcade_mode%-source_([^%-]+)&") then
-      local source = build_source(entity)
-      if source then
+    local source = get_source(entity)
+    if source then
 
-      end
     end
   end
 
@@ -133,28 +144,19 @@ end)
 
 --[[on_cycle_resource]]
 
-local function cycle_resource(player, quantity)
-  local filter = global.filter[player.index]
+-- local function cycle_resource(player, quantity)
+--   if filters.cycle(player, quantity) then
+--     arcade_gui.gui_update(player)
+--   end
+-- end
 
-  -- 1-indexiiiing *shakes fists*
-  filter.index = (filter.index + quantity - 1) % (#global.items + #global.fluids) + 1
-  log((filter.index + quantity - 1) % (#global.items + #global.fluids) + 1)
-  if filter.index > #global.items then
-    filter.kind = "fluid/"..global.fluids[filter.index - #global.items].name
-  else
-    filter.kind = "item/"..global.items[filter.index].name
-  end
+-- script.on_event("arcade_mode-next-resource", function(event)
+--   cycle_resource(game.players[event.player_index], 1)
+-- end)
 
-  arcade_gui.gui_update(player)
-end
-
-script.on_event("arcade_mode-next-resource", function(event)
-  cycle_resource(game.players[event.player_index], 1)
-end)
-
-script.on_event("arcade_mode-previous-resource", function(event)
-  cycle_resource(game.players[event.player_index], -1)
-end)
+-- script.on_event("arcade_mode-previous-resource", function(event)
+--   cycle_resource(game.players[event.player_index], -1)
+-- end)
 
 --[[others]]
 
@@ -172,10 +174,10 @@ local function validate_filter(player)
   -- TODO: actual validation
 end
 
-script.on_event(defines.events.on_player_created, function(event)
-  validate_filter(game.players[event.player_index])
-  arcade_gui.on_player_created(event)
-end)
+-- script.on_event(defines.events.on_player_created, function(event)
+--   validate_filter(game.players[event.player_index])
+--   arcade_gui.on_player_created(event)
+-- end)
 
 script.on_event(defines.events.on_force_created, function(event)
   if not global.counter then
@@ -192,8 +194,21 @@ script.on_event(defines.events.on_research_finished, function(event)
   end
 end)
 
-script.on_event(defines.events.on_gui_click, arcade_gui.on_gui_click)
+-- script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
+--   filters.on_runtime_mod_setting_changed(event)
+--   arcade_gui.on_runtime_mod_setting_changed(event)
+-- end)
+
+script.on_event(defines.events.on_gui_click, source_gui.on_gui_click)
 
 -- [[interfaces]]
+
+script.on_event(defines.events.on_gui_opened, function(event)
+  if event.entity and event.entity.name == "arcade_mode-source" then
+    source_gui.on_source_opened(event.entity, game.players[event.player_index])
+  end
+end)
+
+script.on_event(defines.events.on_gui_closed, source_gui.on_gui_closed)
 
 remote.add_interface(MOD.if_name, MOD.interfaces)
