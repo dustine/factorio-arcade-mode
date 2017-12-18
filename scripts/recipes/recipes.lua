@@ -1,3 +1,5 @@
+require 'stdlib/utils/string'
+
 local recipes = {}
 local vanilla = require "vanilla"
 
@@ -36,7 +38,11 @@ function recipes.format_resource_names(items, fluids)
 end
 
 function recipes.get_default_resources()
-  return recipes.format_resource_names(vanilla)
+  local override = string.split(settings.global["arcade_mode-resources-override"].value, " ")
+  local ov_items, ov_fluids = recipes.format_resource_names(override)
+
+  if #ov_items + #ov_fluids > 0 then return ov_items, ov_fluids
+  else return recipes.format_resource_names(vanilla) end
 end
 
 function recipes.get_belt(level)

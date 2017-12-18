@@ -41,7 +41,7 @@ function sources.finish_source(entity)
 
   local container = surface.create_entity {
     name = "arcade_mode-source_item-container",
-    position = offset_pos(entity, 3),
+    position = offset_pos(entity, 2),
     force = force,
   }
   container.remove_unfiltered_items = true
@@ -63,8 +63,8 @@ function sources.get_source(entity)
 end
 
 
-function sources.delete(source)
-  source = get_source(entity)
+function sources.delete(entity)
+  local source = sources.get_source(entity)
 
   if source.pump then source.pump.destroy() end
   if source.loader then source.loader.destroy() end
@@ -107,7 +107,7 @@ local function set_item(source, target)
   })
   local loader = source.base.surface.create_entity {
     name = "arcade_mode-source_item-loader-"..target.count,
-    position = offset_pos(source.base, 1),
+    position = offset_pos(source.base, 0),
     force = source.base.force,
     direction = defines.direction.east,
     fast_replace = true,
@@ -118,7 +118,7 @@ local function set_item(source, target)
 
   local belt = source.base.surface.create_entity {
     name = recipes.get_belt(target.count),
-    position = offset_pos(source.base, 0),
+    position = offset_pos(source.base, -1),
     force = source.base.force,
     direction = defines.direction.east,
     fast_replace = true,
@@ -136,11 +136,16 @@ end
 local function set_fluid(source, target)
   local pump = source.base.surface.create_entity {
     name = "arcade_mode-source_fluid-".. target.signal.name,
-    position = offset_pos(source.base, 3),
+    position = offset_pos(source.base, 2),
     force = source.base.force,
   }
   pump.destructible = false
   source.pump = pump
+
+  pump.fluidbox[1] = {
+    name = target.signal.name,
+    amount = pump.fluidbox.get_capacity(1),
+  }
 
   local cost = get_cost(source, target)
   source.target = target

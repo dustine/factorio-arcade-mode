@@ -4,8 +4,8 @@ local base = table.deepcopy(data.raw["constant-combinator"]["constant-combinator
 base.name = "arcade_mode-source"
 base.icon = "__ArcadeMode__/graphics/source/icon-item.png"
 -- base.minable = {mining_time = 1, result = "arcade_mode-source"}
-base.collision_box = {{-2.9, -0.4}, {0.9, 0.4}}
-base.selection_box = {{-3.0, -0.5}, {1.0, 0.5}}
+base.collision_box = {{-1.9, -0.4}, {1.9, 0.4}}
+base.selection_box = {{-2.0, -0.5}, {2.0, 0.5}}
 -- base.selection_priority = 50
 base.collision_mask = {"player-layer"}
 base.item_slot_count = 1
@@ -100,7 +100,7 @@ local function generate_fluid_source(fluid)
   source.collision_box = {{-0.4, -0.4}, {3.4, 0.4}}
   source.selection_box = {{-0.5, -0.5}, {3.5, 0.5}}
   source.selectable_in_game = false
-  source.fluid_box.pipe_connections[1].position = {3.5, 0}
+  source.fluid_box.pipe_connections[1].position = {4, 0}
   source.adjacent_tile_collision_test = {"ground-tile"}
   source.collision_mask = { "object-layer", "player-layer" }
   -- source.fluid_box_tile_collision_test = { "water-tile" },

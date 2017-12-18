@@ -5,10 +5,6 @@ MOD.interfaces = {}
 MOD.commands = {}
 -- MOD.config = require "control.config"
 
--- local Position = require('stdlib/area/position')
--- local Chunk = require('stdlib/area/chunk')
-local Area = require('stdlib/area/area')
-
 local source_gui = require("scripts/source-gui")
 local sources = require("scripts/sources")
 
@@ -44,101 +40,6 @@ local function on_script_raised_built(event)
 end
 
 script.on_event(defines.events.script_raised_built, on_script_raised_built)
-
---[[on_player_selected_area + alt]]
-
-local function get_source_components(source)
-  if source.type ~= "item" then return end
-
-  local position = source.main.position
-  source.components = {}
-
-  for _, entity in pairs(source.main.surface.find_entities(Area.construct(
-    position.x-1, position.y, position.x+1, position.y))) do
-    local subtype = entity.name:match("arcade_mode%-source_item%-(.*)&")
-    if subtype then
-      source.components[subtype] = entity
-    end
-  end
-end
-
-local function get_source(entity)
-  local type = entity.name:match("arcade_mode%-source_([^%-]+)&")
-  if not type then return end
-  local source = {
-    main = entity,
-    type = type
-  }
-  get_source_components(source)
-
-  return source
-end
-
-script.on_event(defines.events.on_player_selected_area, function(event)
-  if not event.item == "arcade_mode-unlocker" then return end
-
-  local player = game.players[event.player_index]
-  local force = player.force.name
-
-  local filter = global.filter[player.index]
-  local index = filter.index
-  local recipe = global.items[index] or global.fluids[index - #global.items]
-
-  if not recipe or not recipe.valid then return end
-
-  for _, entity in pairs(event.entities) do
-    local source = get_source(entity)
-    if source then
-
-    end
-  end
-
-  player.surface.create_entity {
-    name = "flying-text",
-    position = player.position,
-    text = global.counter[player.force.name] or "???"
-  }
-end)
-
-script.on_event(defines.events.on_player_alt_selected_area, function(event)
-  if not event.item == "arcade_mode-unlocker" then return end
-  local player = game.players[event.player_index]
-  local force = player.force.name
-
-  for _, entity in pairs(event.entities) do
-    if entity.name:match("arcade_mode%-spawner%-base") and entity.active then
-      local display = entity.surface.find_entity("arcade_mode-spawner-display", entity.position)
-
-      if display then display.graphics_variation = 1 end
-      entity.active = false
-      global.counter[force] = global.counter[force] + 1
-      entity.set_recipe(nil)
-      flush_spawner(entity)
-    end
-  end
-
-  player.surface.create_entity {
-    name = "flying-text",
-    position = player.position,
-    text = global.counter[player.force.name] or "???"
-  }
-end)
-
---[[on_cycle_resource]]
-
--- local function cycle_resource(player, quantity)
---   if filters.cycle(player, quantity) then
---     arcade_gui.gui_update(player)
---   end
--- end
-
--- script.on_event("arcade_mode-next-resource", function(event)
---   cycle_resource(game.players[event.player_index], 1)
--- end)
-
--- script.on_event("arcade_mode-previous-resource", function(event)
---   cycle_resource(game.players[event.player_index], -1)
--- end)
 
 --[[others]]
 
@@ -179,10 +80,23 @@ script.on_event(defines.events.on_research_finished, function(event)
   end
 end)
 
--- script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
---   filters.on_runtime_mod_setting_changed(event)
---   arcade_gui.on_runtime_mod_setting_changed(event)
--- end)
+script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
+  if event.setting == "arcade_mode-resources-override" then
+    sources.on_resources_changed()
+    game.print("Resources changed", {r=0, g=0.5, b=1})
+  end
+end)
+
+--[[ on_*_mined ]]
+
+local function on_mined_entity(event)
+  local entity = event.entity
+  if entity.name ~= "arcade_mode-source" then return end
+  sources.delete(entity)
+end
+
+script.on_event(defines.events.on_robot_mined_entity, on_mined_entity)
+script.on_event(defines.events.on_player_mined_entity, on_mined_entity)
 
 -- [[ GUI ]]
 

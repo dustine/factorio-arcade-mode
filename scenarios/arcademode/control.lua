@@ -98,7 +98,7 @@ local function generate_spawner_chunk(event)
     entity.destroy()
   end
 
-  local iterator = Position.increment({area.left_top.x+2.5, area.left_top.y-0.5}, 0, 1)
+  local iterator = Position.increment({area.left_top.x+1.5, area.left_top.y-0.5}, 0, 1)
   for i=1,32 do
     local source = surface.create_entity {
       name = "arcade_mode-source",
@@ -106,6 +106,7 @@ local function generate_spawner_chunk(event)
       force = force
     }
     source.destructible = false
+    source.minable = false
     script.raise_event(defines.events.script_raised_built, {entity = source})
   end
 end
