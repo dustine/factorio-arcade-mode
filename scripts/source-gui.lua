@@ -208,7 +208,7 @@ function source_gui.on_gui_click(event)
   local match = element.name:match("%-pick%-select%-([^%-]*/.+)$")
   if match then
     log("pick select")
-    if sources.set_source(source, {
+    if sources.set_target(source, {
       count = 1,
       signal = {
         type = match:match("^(.+)/"),
@@ -220,7 +220,7 @@ function source_gui.on_gui_click(event)
   end
 
   if element.name:match("%-target%-reset$") then
-    sources.set_source(source)
+    sources.set_target(source)
     source_gui.on_source_pick(source, player)
     return
   end

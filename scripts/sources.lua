@@ -156,7 +156,7 @@ end
 
 
 
-function sources.set_source(entity, target)
+function sources.set_target(entity, target)
   local source = global.sources[entity.unit_number]
 
   if get_cost(source, target) > global.counter[source.base.force.name] then return false end

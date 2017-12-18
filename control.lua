@@ -62,27 +62,6 @@ local function get_source_components(source)
   end
 end
 
-local function destroy_source(source)
-  if source.components then
-    for _, e in pairs(source.components) do e.destroy() end
-  end
-  source.destroy()
-end
-
--- changes a source's target (replacing it with a proper type as needed)
-local function change_source(source, new_type, target)
-  if source.type == new_type then
-    -- for type == none, just leave it be
-    if not target then return end
-    set_source_target(source, target)
-  else
-    -- recreation time
-    local position = source.position
-    destroy_source(source, type)
-    create_source(new_type, position, target)
-  end
-end
-
 local function get_source(entity)
   local type = entity.name:match("arcade_mode%-source_([^%-]+)&")
   if not type then return end
@@ -163,19 +142,22 @@ end)
 
 --[[others]]
 
--- Validates a player's filter, (re)creating it if necessary
-local function validate_filter(player)
-  local filter = global.filter[player.index]
-  if not filter then
-    global.filter[player.index] = {
-      index = 0
-    }
-    cycle_resource(player, 1)
-    return
-  end
+script.on_event(defines.events.on_entity_settings_pasted, function(event)
+  if event.destination.name ~= "arcade_mode-source" then return end
+  if event.source.name ~= "arcade_mode-source" then return end
 
-  -- TODO: actual validation
-end
+  local player = game.players[event.player_index]
+  local signal = sources.get_source(event.source).target
+
+  if not sources.set_target(event.destination, signal) then
+    player.surface.create_entity {
+      name = "flying-text",
+      position = player.position,
+      text = {"status.arcade_mode-no-charges"},
+      color = {r=1, g=0.5, b=0.5}
+    }
+  end
+end)
 
 -- script.on_event(defines.events.on_player_created, function(event)
 --   validate_filter(game.players[event.player_index])
@@ -202,9 +184,9 @@ end)
 --   arcade_gui.on_runtime_mod_setting_changed(event)
 -- end)
 
-script.on_event(defines.events.on_gui_click, source_gui.on_gui_click)
+-- [[ GUI ]]
 
--- [[interfaces]]
+script.on_event(defines.events.on_gui_click, source_gui.on_gui_click)
 
 script.on_event(defines.events.on_gui_opened, function(event)
   if event.entity and event.entity.name == "arcade_mode-source" then
@@ -214,19 +196,7 @@ end)
 
 script.on_event(defines.events.on_gui_closed, source_gui.on_gui_closed)
 
-script.on_event(defines.events.on_entity_settings_pasted, function(event)
-  local player = game.players[event.player_index]
-  local signal = sources.get_source(event.source).target
-
-  if not sources.set_source(event.destination, signal) then
-    player.surface.create_entity {
-      name = "flying-text",
-      position = player.position,
-      text = {"status.arcade_mode-no-charges"},
-      color = {r=1, g=0.5, b=0.5}
-    }
-  end
-end)
+-- [[interfaces]]
 
 remote.add_interface(MOD.if_name, MOD.interfaces)
 for name, command in pairs(MOD.commands) do

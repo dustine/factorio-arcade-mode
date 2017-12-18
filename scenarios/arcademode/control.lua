@@ -105,7 +105,6 @@ local function generate_spawner_chunk(event)
       position = iterator(),
       force = force
     }
-    -- pole.operable = false
     source.destructible = false
     script.raise_event(defines.events.script_raised_built, {entity = source})
   end
@@ -129,7 +128,7 @@ script.on_event(defines.events.on_player_created, function(event)
   player.insert{name="pistol", count = 1}
   player.insert{name="firearm-magazine", count = 10}
   player.insert{name="stone-furnace", count = 1}
-  player.insert{name="arcade_mode-source", count = 10}
+  -- player.insert{name="arcade_mode-source", count = 10}
 
   if (#game.players <= 1) then
     game.show_message_dialog{text = {"msg-intro"}}
