@@ -1,17 +1,17 @@
 local recipes = {}
 local vanilla = require "vanilla"
 
-local function sortPrototype(lht, rht)
+local function sort_prototype(lht, rht)
   if lht.order == rht.order then
     return lht.name < rht.name
   else return lht.order < rht.order end
 end
 
-function recipes.sortResources(t)
-  table.sort(t, sortPrototype)
+function recipes.sort_resources(t)
+  table.sort(t, sort_prototype)
 end
 
-function recipes.formatResourceNames(items, fluids)
+function recipes.format_resource_names(items, fluids)
   fluids = fluids or items.fluids
   items = (items and items.items) or items or {}
 
@@ -29,14 +29,20 @@ function recipes.formatResourceNames(items, fluids)
     end end
   end
 
-  recipes.sortResources(prototypes.items)
-  recipes.sortResources(prototypes.fluids)
+  recipes.sort_resources(prototypes.items)
+  recipes.sort_resources(prototypes.fluids)
 
   return prototypes.items, prototypes.fluids
 end
 
-function recipes.getDefaultResources()
-  return recipes.formatResourceNames(vanilla)
+function recipes.get_default_resources()
+  return recipes.format_resource_names(vanilla)
+end
+
+function recipes.get_belt(level)
+  if level == 1 then return "transport-belt" end
+  if level == 2 then return "fast-transport-belt" end
+  if level == 3 then return "express-transport-belt" end
 end
 
 return recipes

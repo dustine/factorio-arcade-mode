@@ -1,10 +1,29 @@
 
+local sources = require "sources"
 require "mod-gui"
+
 local source_gui = {}
 
 local gui = {}
 gui.version = 1
 gui.name = "arcade_mode-gui_source"
+gui.name_pattern = "arcade_mode%-gui_source"
+
+function source_gui.on_configuration_changed(event)
+end
+
+-------------------------------------------------------------------------------
+
+local function make_smart_slot(parent, name, signal, style)
+  local rate = parent.add {
+    type = "choose-elem-button",
+    name = name,
+    elem_type = "signal",
+    style = style or "slot_button",
+  }
+  rate.locked = true
+  rate.elem_value = signal
+end
 
 function source_gui.on_init()
   if global.source_gui ~= nil then return end
@@ -14,6 +33,69 @@ function source_gui.on_init()
   global.source_gui.source = {}
 end
 
+
+
+function source_gui.on_source_pick(source, player)
+  log("pick")
+  local counter = global.counter[source.force.name]
+
+  if counter <= 0 then
+    player.surface.create_entity {
+      name = "flying-text",
+      position = player.position,
+      text = {"status.arcade_mode-no-charges"},
+      color = {r=1, g=0.5, b=0.5}
+    }
+
+    player.opened = nil
+    return
+  end
+
+  local name = gui.name.."-pick"
+  if player.gui.center[name] then
+    player.gui.center[name].destroy()
+    global.source_gui.source[player.index] = nil
+    return
+  end
+
+  --[[ GUI ]]
+
+  local pick = player.gui.center.add {
+    type = "frame",
+    name = name,
+    caption = {"gui-caption.arcade_mode-pick"},
+    direction = "vertical"
+  }
+
+  local resources = pick.add {
+    type = "table",
+    name = name.."-resources",
+    column_count = 6,
+    style = "slot_table"
+  }
+
+  for _, item in pairs(global.items) do
+    make_smart_slot(resources, name.."-select-item/"..item.name, {name = item.name, type="item"}, "recipe_slot_button")
+  end
+  for i, fluid in pairs(global.fluids) do
+    make_smart_slot(resources, name.."-select-fluid/"..fluid.name, {name = fluid.name, type="fluid"}, "recipe_slot_button")
+  end
+
+  local define = pick.add {
+    type = "button",
+    name = name.."-define",
+    caption = {"gui-caption.arcade_mode-pick-define"},
+    style = "slot_with_filter_button"
+  }
+  define.style.minimal_width = 32*6+2*5
+  define.style.horizontally_stretchable = true
+  define.style.horizontally_squashable = true
+
+  player.opened = pick
+end
+
+
+
 function source_gui.on_source_main(source, player)
   local name = gui.name.."-main"
   if player.gui.center[name] then
@@ -22,7 +104,7 @@ function source_gui.on_source_main(source, player)
     return
   end
 
-  local counter = global.counter[player.force.name]
+  local counter = global.counter[source.force.name]
   local signal = source.get_control_behavior().get_signal(1)
 
   --[[ GUI ]]
@@ -63,15 +145,7 @@ function source_gui.on_source_main(source, player)
   }
   settings.style.vertical_spacing = 5
 
-  local target = settings.add {
-    type = "choose-elem-button",
-    name = name.."-target",
-    caption = {"gui-caption.arcade_mode-main-target"},
-    elem_type = "signal",
-    style = "slot_button",
-  }
-  target.elem_value = signal.signal
-  target.locked = true
+  make_smart_slot(settings, name.."-target", signal.signal)
 
   settings.add {
     type = "sprite-button",
@@ -80,18 +154,7 @@ function source_gui.on_source_main(source, player)
     style = "slot_button",
   }
 
-  local rate = settings.add {
-    type = "choose-elem-button",
-    name = name.."-rate",
-    -- caption = {"arcade_mode-main-target"},
-    elem_type = "signal",
-    style = "slot_button",
-  }
-  rate.locked = true
-  rate.elem_value = {
-    type = "item",
-    name = "transport-belt"
-  }
+  make_smart_slot(settings, name.."-rate", {type = "item", name = "transport-belt"})
 
   local rate_adjust = settings.add {
     type = "table",
@@ -116,81 +179,17 @@ function source_gui.on_source_main(source, player)
   player.opened = main
 end
 
-function source_gui.on_source_pick(source, player)
-  local counter = global.counter[player.force.name]
 
-  if counter < 0 then
-    player.surface.create_entity {
-      name = "flying-text",
-      position = player.position,
-      text = {"status.arcade_mode-no-charges"},
-      color = {r=1, g=0.5, b=0.5}
-    }
-    return
-  end
-
-  local name = gui.name.."-pick"
-  if player.gui.center[name] then
-    player.gui.center[name].destroy()
-    global.source_gui.source[player.index] = nil
-    return
-  end
-
-  --[[ GUI ]]
-
-  local pick = player.gui.center.add {
-    type = "frame",
-    name = name,
-    caption = {"gui-caption.arcade_mode-pick"},
-    direction = "vertical"
-  }
-
-  local resources = pick.add {
-    type = "table",
-    name = name.."-resources",
-    column_count = 6,
-    style = "slot_table"
-  }
-
-  for i, item in ipairs(global.items) do
-    local a = resources.add {
-      type = "sprite-button",
-      name = "arcade_mode-gui_button-select-"..i,
-      sprite = "item/"..item.name,
-      style = "recipe_slot_button",
-      tooltip = item.localised_name
-    }
-    a.style.vertical_align = "bottom"
-  end
-  for i, fluid in ipairs(global.fluids) do
-    resources.add {
-      type = "sprite-button",
-      name = "arcade_mode-gui-select-"..(i + #global.items).."-button",
-      sprite =  "fluid/"..fluid.name,
-      style = "recipe_slot_button",
-      tooltip = fluid.localised_name
-    }
-  end
-
-  local define = pick.add {
-    type = "button",
-    name = name.."-define",
-    caption = {"arcade_mode-pick-define"},
-    style = "slot_with_filter_button"
-  }
-  define.style.horizontally_stretchable = true
-
-  player.opened = pick
-end
 
 function source_gui.on_source_opened(source, player)
   if not (player and player.valid) then return end
 
-  global.source_gui.source[player.index] = source
-  local signal = source.get_control_behavior().get_signal(1)
-  log(serpent.block(signal))
+  log("source opened")
 
-  if not signal or not signal.signal then
+  global.source_gui.source[player.index] = source
+  local source_info = sources.get_source(source)
+
+  if not source_info.target.signal then
     source_gui.on_source_pick(source, player)
   else
     source_gui.on_source_main(source, player)
@@ -200,22 +199,49 @@ end
 function source_gui.on_gui_click(event)
   local element = event.element
   if not element.valid then return end
-  if not element.name:match(gui.name) then return end
+  if not element.name:match(gui.name_pattern) then return end
 
   local player = game.players[event.player_index]
   local source = global.source_gui.source[player.index]
-
   if not source or not source.valid then return end
+
+  local match = element.name:match("%-pick%-select%-([^%-]*/.+)$")
+  if match then
+    log("pick select")
+    if sources.set_source(source, {
+      count = 1,
+      signal = {
+        type = match:match("^(.+)/"),
+        name = match:match("/(.+)$")
+    }}) then
+      source_gui.on_source_main(source, player)
+    end
+    return
+  end
+
+  if element.name:match("%-target%-reset$") then
+    sources.set_source(source)
+    source_gui.on_source_pick(source, player)
+    return
+  end
 end
 
 function source_gui.on_gui_closed(event)
-  local player = game.players[event.player_index]
   local element = event.element
+  if not element or not element.name:match("arcade_mode%-gui_source") then return end
+  local player = game.players[event.player_index]
+  local source = global.source_gui.source[player.index]
+  local source_info = sources.get_source(source)
 
-  if not element then return end
+  local name = element.name
+  log("delete "..name)
 
-  if element.name:match("arcade_mode%-gui_source") then
+  if name:match("arcade_mode%-gui_source") then
     element.destroy()
+
+    -- if name:match("%-pick$") and source_info.target.signal then
+    --   source_gui.on_source_main(source, player)
+    -- end
   end
 end
 

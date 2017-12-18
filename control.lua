@@ -5,12 +5,12 @@ MOD.interfaces = {}
 MOD.commands = {}
 -- MOD.config = require "control.config"
 
-local Position = require('stdlib/area/position')
-local Chunk = require('stdlib/area/chunk')
+-- local Position = require('stdlib/area/position')
+-- local Chunk = require('stdlib/area/chunk')
 local Area = require('stdlib/area/area')
 
 local source_gui = require("scripts/source-gui")
-local filters = require("scripts/filters")
+local sources = require("scripts/sources")
 
 
 script.on_init(function()
@@ -19,24 +19,27 @@ script.on_init(function()
     global.counter[force.name] = 1
   end
 
-  global.sources = {}
-
-  filters.on_init()
-  -- arcade_gui.on_init()
+  sources.on_init()
   source_gui.on_init()
 end)
 
 script.on_configuration_changed(function(event)
-  -- filters.on_configuration_changed(event)
-  -- arcade_gui.on_configuration_changed(event)
+  sources.on_configuration_changed(event)
+  source_gui.on_configuration_changed(event)
 end)
 
+MOD.commands.setcounter = function(event)
+  local player = game.players[event.player_index]
+  local number = tonumber(event.parameter)
+
+  if number then global.counter[player.force.name] = number end
+end
+
+--[[script_raised_built]]
 
 local function on_script_raised_built(event)
   if event.entity and event.entity.valid and event.entity.name == "arcade_mode-source" then
-    -- register source
-    local source_info = {}
-    global.sources[event.entity.unit_number] = source_info
+    sources.finish_source(event.entity)
   end
 end
 
@@ -211,4 +214,21 @@ end)
 
 script.on_event(defines.events.on_gui_closed, source_gui.on_gui_closed)
 
+script.on_event(defines.events.on_entity_settings_pasted, function(event)
+  local player = game.players[event.player_index]
+  local signal = sources.get_source(event.source).target
+
+  if not sources.set_source(event.destination, signal) then
+    player.surface.create_entity {
+      name = "flying-text",
+      position = player.position,
+      text = {"status.arcade_mode-no-charges"},
+      color = {r=1, g=0.5, b=0.5}
+    }
+  end
+end)
+
 remote.add_interface(MOD.if_name, MOD.interfaces)
+for name, command in pairs(MOD.commands) do
+  commands.add_command(name, {"command-help."..name}, command)
+end

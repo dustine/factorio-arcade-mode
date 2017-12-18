@@ -14,7 +14,13 @@ script.on_init(function()
   global.version = version
   silo_script.on_init()
 
-  local blacklist = {"trees"}
+  -- whitelist, make it into a set
+  local whitelist = {"desert", "dirt", "enemy-base", "grass", "sand"}
+  local whiteset = {}
+  for _, value in pairs(whitelist) do
+    whiteset[value] = true
+  end
+
   local settings = {
     autoplace_controls = {},
     seed = game.surfaces.nauvis.map_gen_settings.seed,
@@ -24,11 +30,17 @@ script.on_init(function()
       cliff_elevation_interval = 10,
       name = "cliff"
     },
+    default_enable_all_autoplace_controls = false,
+    starting_area = game.surfaces.nauvis.map_gen_settings.starting_area
   }
-  for _, c in pairs(blacklist) do
-    settings.autoplace_controls[c] = {
-      size = "none"
-    }
+  for name, c in pairs(game.surfaces.nauvis.map_gen_settings.autoplace_controls) do
+    if whiteset[name] then
+      settings.autoplace_controls[name] = table.deepcopy(c)
+      if name == "enemy-base" and settings.autoplace_controls[name].size ~= "none" then
+        settings.autoplace_controls[name].frequency = "very-high"
+        settings.autoplace_controls[name].size = "very-big"
+      end
+    end
   end
 
   game.create_surface("anulus", settings)
@@ -54,7 +66,7 @@ local function generate_empty_chunk(event)
       position = Position.construct(x, y)
     })
   end
-  event.surface.set_tiles(tiles)
+  event.surface.set_tiles(tiles, false)
 end
 
 local function generate_spawner_chunk(event)
@@ -64,8 +76,8 @@ local function generate_spawner_chunk(event)
 
   -- set the stable bedrock
   local pavement = Area.construct(
-    area.left_top.x, area.left_top.y,
-    area.left_top.x+3, area.right_bottom.y
+    area.left_top.x+0, area.left_top.y+0.5,
+    area.left_top.x+3, area.right_bottom.y-0.5
   )
   local tiles = {}
   for x,y in Area.iterate(pavement) do
@@ -117,7 +129,6 @@ script.on_event(defines.events.on_player_created, function(event)
   player.insert{name="pistol", count = 1}
   player.insert{name="firearm-magazine", count = 10}
   player.insert{name="stone-furnace", count = 1}
-  player.insert{name="arcade_mode-unlocker", count = 1}
   player.insert{name="arcade_mode-source", count = 10}
 
   if (#game.players <= 1) then
@@ -136,7 +147,6 @@ script.on_event(defines.events.on_player_respawned, function(event)
   local player = game.players[event.player_index]
   player.insert{name="pistol", count=1}
   player.insert{name="firearm-magazine", count=10}
-  player.insert{name="arcade_mode-unlocker", count = 1}
 end)
 
 script.on_event(defines.events.on_gui_click, function(event)
