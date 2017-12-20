@@ -45,10 +45,12 @@ function recipes.get_default_resources()
   else return recipes.format_resource_names(vanilla) end
 end
 
-function recipes.get_belt(level)
-  if level == 1 then return "transport-belt" end
-  if level == 2 then return "fast-transport-belt" end
-  if level == 3 then return "express-transport-belt" end
+function recipes.get_proxy(type, level)
+  if type == "item" then
+    if level == 1 then return "transport-belt" end
+    if level == 2 then return "fast-transport-belt" end
+    if level == 3 then return "express-transport-belt" end
+  elseif type == "fluid" then return "offshore-pump" end
 end
 
 return recipes

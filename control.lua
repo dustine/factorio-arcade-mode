@@ -6,13 +6,18 @@ MOD.commands = {}
 -- MOD.config = require "control.config"
 
 -- local recipes = require("scripts/recipes/recipes")
+
+require "stdlib/utils/table"
 local sources = require("scripts/sources")
 
 local function init_force(force)
   global.limits = global.limits or {}
   global.limits[force.name] = {
     counter = 1,
-    speed = 1
+    speed = {
+      item = 1,
+      fluid = 1
+    }
   }
 end
 
@@ -39,7 +44,7 @@ end
 
 local function on_script_raised_built(event)
   if event.entity and event.entity.valid and event.entity.name == "arcade_mode-source" then
-    sources.finish_source(event.entity)
+    sources.finish(event.entity)
   end
 end
 
@@ -52,15 +57,16 @@ script.on_event(defines.events.on_entity_settings_pasted, function(event)
   if event.source.name ~= "arcade_mode-source" then return end
 
   local player = game.players[event.player_index]
-  local signal = sources.get_source(event.source).target
+  local signal = sources.get(event.source).target
 
-  if not sources.set_target(event.destination, signal) then
+  if not sources.set_target(event.destination, player, signal) then
     player.surface.create_entity {
       name = "flying-text",
       position = player.position,
       text = {"status.arcade_mode-no-charges"},
       color = {r=1, g=0.5, b=0.5}
     }
+    sources.refresh_display(event.destination)
   end
 end)
 
@@ -75,8 +81,10 @@ end)
 
 script.on_event(defines.events.on_research_finished, function(event)
   local force = event.research.force.name
-  if event.research.name:match("arcade_mode%-unlocker") then
+  if event.research.name:match("arcade_mode%-unlocker%-unlock") then
     global.limits[force].counter = math.max(global.limits[force].counter, event.research.level + 1)
+  elseif event.research.name:match("arcade_mode%-unlocker%-upgrade") then
+    global.limits[force].speed.item = math.max(global.limits[force].speed.item,event.research.level + 1)
   end
 end)
 
