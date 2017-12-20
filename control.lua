@@ -5,9 +5,7 @@ MOD.interfaces = {}
 MOD.commands = {}
 -- MOD.config = require "control.config"
 
-local source_gui = require("scripts/source-gui")
 local sources = require("scripts/sources")
-
 
 script.on_init(function()
   global.counter = global.counter or {}
@@ -16,12 +14,10 @@ script.on_init(function()
   end
 
   sources.on_init()
-  source_gui.on_init()
 end)
 
 script.on_configuration_changed(function(event)
   sources.on_configuration_changed(event)
-  source_gui.on_configuration_changed(event)
 end)
 
 MOD.commands.setcounter = function(event)
@@ -100,15 +96,15 @@ script.on_event(defines.events.on_player_mined_entity, on_mined_entity)
 
 -- [[ GUI ]]
 
-script.on_event(defines.events.on_gui_click, source_gui.on_gui_click)
+script.on_event(defines.events.on_gui_click, sources.gui.on_click)
 
 script.on_event(defines.events.on_gui_opened, function(event)
   if event.entity and event.entity.name == "arcade_mode-source" then
-    source_gui.on_source_opened(event.entity, game.players[event.player_index])
+    sources.gui.on_source_opened(event.entity, game.players[event.player_index])
   end
 end)
 
-script.on_event(defines.events.on_gui_closed, source_gui.on_gui_closed)
+script.on_event(defines.events.on_gui_closed, sources.gui.on_closed)
 
 -- [[interfaces]]
 
