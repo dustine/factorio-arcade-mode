@@ -5,12 +5,20 @@ MOD.interfaces = {}
 MOD.commands = {}
 -- MOD.config = require "control.config"
 
+-- local recipes = require("scripts/recipes/recipes")
 local sources = require("scripts/sources")
 
+local function init_force(force)
+  global.limits = global.limits or {}
+  global.limits[force.name] = {
+    counter = 1,
+    speed = 1
+  }
+end
+
 script.on_init(function()
-  global.counter = global.counter or {}
   for _, force in pairs(game.forces) do
-    global.counter[force.name] = 1
+    init_force(force)
   end
 
   sources.on_init()
@@ -62,24 +70,20 @@ end)
 -- end)
 
 script.on_event(defines.events.on_force_created, function(event)
-  if not global.counter then
-    log("Force-creating global.counter"); global.counter = {}
-  end
-  local force = event.force.name
-  global.counter[force] = global.counter[force] or 1
+  init_force(event.force)
 end)
 
 script.on_event(defines.events.on_research_finished, function(event)
   local force = event.research.force.name
   if event.research.name:match("arcade_mode%-unlocker") then
-    global.counter[force] = global.counter[force] + 1
+    global.limits[force].counter = math.max(global.limits[force].counter, event.research.level + 1)
   end
 end)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   if event.setting == "arcade_mode-resources-override" then
     sources.on_resources_changed()
-    game.print("Resources changed", {r=0, g=0.5, b=1})
+    game.print("Resources changed", {r=5, g=0.8, b=1})
   end
 end)
 

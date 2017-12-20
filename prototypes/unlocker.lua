@@ -36,7 +36,7 @@ local unlock_template = {
   icon_size = 128,
   effects = {{
     type = "nothing",
-    effect_description = "technology-effect.arcade_mode-unlocker-unlock"
+    effect_description = {"technology-effect.arcade_mode-unlocker-unlock"}
   }},
   upgrade = true,
   order = "z-[ArcadeMode]-a-a"
@@ -86,11 +86,8 @@ data:extend {{
   prerequisites = {"arcade_mode-unlocker-unlock-2", "logistics-2"},
   effects = {{
     type = "nothing",
-    effect_description = "technology-effect.arcade_mode-unlocker-upgrade"
-  },{
-    type = "nothing",
-    effect_description = "technology-effect.arcade_mode-unlocker-upgrade-1"
-  }},
+    effect_description = {"technology-effect.arcade_mode-unlocker-upgrade", {"entity-name.fast-transport-belt"}}
+  }}
 }}
 
 make_unlock({"science-pack-1", "science-pack-2", "science-pack-3"}, "20*L", 49)
@@ -114,7 +111,7 @@ data:extend {{
   prerequisites = {"arcade_mode-unlocker-unlock-50", "arcade_mode-unlocker-upgrade-1", "logistics-3"},
   effects = {{
     type = "nothing",
-    effect_description = "technology-effect.arcade_mode-unlocker-upgrade-2"
+    effect_description = {"technology-effect.arcade_mode-unlocker-upgrade", {"entity-name.express-transport-belt"}}
   }},
   upgrade = true
 }}

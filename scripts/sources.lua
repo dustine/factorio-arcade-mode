@@ -53,7 +53,6 @@ function sources.get_source(entity)
   return global.sources[entity.unit_number]
 end
 
-
 function sources.delete(entity)
   local source = sources.get_source(entity)
 
@@ -83,7 +82,7 @@ local function reset(source)
     e.destroy()
   end
 
-  global.counter[source.base.force.name] = global.counter[source.base.force.name] + source.target.count
+  global.limits[source.base.force.name].counter = global.limits[source.base.force.name].counter + source.target.count
   source.target = off()
 end
 
@@ -129,7 +128,7 @@ local function set_item(source, target)
   local cost = get_cost(source, target)
 
   source.target = target
-  global.counter[source.base.force.name] = global.counter[source.base.force.name] - cost
+  global.limits[source.base.force.name].counter = global.limits[source.base.force.name].counter - cost
 end
 
 local function set_fluid(source, target)
@@ -148,7 +147,7 @@ local function set_fluid(source, target)
 
   local cost = get_cost(source, target)
   source.target = target
-  global.counter[source.base.force.name] = global.counter[source.base.force.name] - cost
+  global.limits[source.base.force.name].counter = global.limits[source.base.force.name].counter - cost
 end
 
 
@@ -163,7 +162,7 @@ end
 function sources.set_target(entity, target)
   local source = global.sources[entity.unit_number]
 
-  if get_cost(source, target) > global.counter[source.base.force.name] then return false end
+  if get_cost(source, target) > global.limits[source.base.force.name].counter then return false end
 
   reset(source)
 
@@ -192,8 +191,14 @@ gui.version = 1
 gui.name = "arcade_mode-gui_source"
 gui.name_pattern = "arcade_mode%-gui_source"
 
--- function gui.on_configuration_changed(event)
--- end
+function gui.on_init()
+  global.sources.open = {}
+end
+
+function gui.on_configuration_changed()
+end
+
+--------------------------------------------------------------------------------
 
 local function make_smart_slot(parent, name, signal, style)
   local rate = parent.add {
@@ -206,19 +211,9 @@ local function make_smart_slot(parent, name, signal, style)
   rate.elem_value = signal
 end
 
-function gui.on_init()
-  if global.source_gui ~= nil then return end
-  global.source_gui = {}
-  global.source_gui.version = gui.version
-
-  global.source_gui.source = {}
-end
-
-
-
 function gui.on_source_pick(source, player)
   log("pick")
-  local counter = global.counter[source.force.name]
+  local counter = global.limits[source.base.force.name].counter
 
   if counter <= 0 then
     player.surface.create_entity {
@@ -235,7 +230,7 @@ function gui.on_source_pick(source, player)
   local name = gui.name.."-pick"
   if player.gui.center[name] then
     player.gui.center[name].destroy()
-    global.source_gui.source[player.index] = nil
+    global.sources.open[player.index] = nil
     return
   end
 
@@ -276,17 +271,44 @@ function gui.on_source_pick(source, player)
 end
 
 
+local function get_counter_info(player)
+  if player.cheat_mode then return "∞", "bold_blue_label" end
+
+  local counter = global.limits[player.force.name].counter
+  if counter <= 0 then return counter, "bold_red_label"
+  else return counter, "caption_label" end
+end
+
+function gui.update_source_main(source, player)
+  local name = gui.name.."-main"
+  local main = player.gui.center[name]
+  if not main then return end
+
+  local counter = main[name.."-counter"]
+  local counter_n, counter_style = get_counter_info(player)
+  log(serpent.block(counter.caption))
+  counter.caption = {"gui-caption.arcade_mode-main-counter", counter_n}
+  counter.style = counter_style
+
+  local rate = main[name.."-flow"][name.."-settings"][name.."-rate"]
+  rate[name.."-rate-info"].elem_value = {
+    type = "item",
+    name = recipes.get_belt(source.target.count)
+  }
+  rate[name.."-rate-minus"].enabled = source.target.count > 1
+  rate[name.."-rate-plus"].enabled = source.target.count < global.limits[player.force.name].speed
+end
 
 function gui.on_source_main(source, player)
   local name = gui.name.."-main"
   if player.gui.center[name] then
     player.gui.center[name].destroy()
-    global.source_gui.source[player.index] = nil
+    
+    global.sources.open[player.index] = nil
     return
   end
 
-  local counter = global.counter[source.force.name]
-  local signal = source.get_control_behavior().get_signal(1)
+  local signal = source.base.get_control_behavior().get_signal(1)
 
   --[[ GUI ]]
 
@@ -300,25 +322,24 @@ function gui.on_source_main(source, player)
   main.add {
     type = "label",
     name = name.."-counter",
-    caption = {"gui-caption.arcade_mode-main-counter", counter},
-    style = (counter <= 0 and "bold_red_label") or "caption_label"
+    caption = {"gui-caption.arcade_mode-main-counter", "?"},
   }
 
-  local main_frame = main.add {
+  local flow = main.add {
     type = "flow",
     name = name.."-flow",
     direction = "horizontal"
   }
 
-  local camera = main_frame.add {
+  local camera = flow.add {
     type = "camera",
     name = name.."-camera",
-    position = source.position
+    position = source.base.position
   }
   camera.style.width = 100
   camera.style.height = 100
 
-  local settings = main_frame.add {
+  local settings = flow.add {
     type = "table",
     name = name.."-settings",
     column_count = 2,
@@ -335,42 +356,52 @@ function gui.on_source_main(source, player)
     style = "slot_button",
   }
 
-  make_smart_slot(settings, name.."-rate", {type = "item", name = "transport-belt"})
+  ----------------------------------------
 
-  local rate_adjust = settings.add {
-    type = "table",
-    name = name.."-rate-adjust",
-    column_count = 2,
+  local rate = settings.add {
+    type = "flow",
+    name = name.."-rate",
+    direction = "horizontal"
   }
-  rate_adjust.style.horizontal_spacing = 0
 
-  rate_adjust.add {
+  local rate_minus = rate.add {
     type = "button",
     name = name.."-rate-minus",
     caption = "-",
     style = mod_gui.button_style
   }
-  rate_adjust.add {
+  rate_minus.style.minimal_width = 18
+  rate_minus.style.font = "default-large-semibold"
+
+  make_smart_slot(rate, name.."-rate-info", {type = "item"})
+
+  local rate_plus = rate.add {
     type = "button",
     name = name.."-rate-plus",
     caption = "+",
     style = mod_gui.button_style
   }
+  rate_plus.style.minimal_width = 18
+  rate_plus.style.font = "default-large-semibold"
 
+  ----------------------------------------
+
+  gui.update_source_main(source, player)
   player.opened = main
 end
 
 
 
-function gui.on_source_opened(source, player)
+function gui.on_source_opened(entity, player)
   if not (player and player.valid) then return end
 
   log("source opened")
 
-  global.source_gui.source[player.index] = source
-  local source_info = sources.get_source(source)
+  local source = sources.get_source(entity)
+  log(serpent.block(source))
+  global.sources.open[player.index] = source.base
 
-  if not source_info.target.signal then
+  if not source.target.signal then
     gui.on_source_pick(source, player)
   else
     gui.on_source_main(source, player)
@@ -383,13 +414,18 @@ function gui.on_click(event)
   if not element.name:match(gui.name_pattern) then return end
 
   local player = game.players[event.player_index]
-  local source = global.source_gui.source[player.index]
-  if not source or not source.valid then return end
+
+  local entity = global.sources.open[player.index]
+  if not entity or not entity.valid then
+    player.opened.destroy()
+    return
+  end
+  local source = sources.get_source(entity)
 
   local match = element.name:match("%-pick%-select%-([^%-]*/.+)$")
   if match then
     log("pick select")
-    if sources.set_target(source, {
+    if sources.set_target(entity, {
       count = 1,
       signal = {
         type = match:match("^(.+)/"),
@@ -411,7 +447,7 @@ function gui.on_closed(event)
   local element = event.element
   if not element or not element.name:match("arcade_mode%-gui_source") then return end
   -- local player = game.players[event.player_index]
-  -- local source = global.source_gui.source[player.index]
+  -- local source = source = global.sources[global.sources.open[player.index]]
   -- local source_info = sources.get_source(source)
 
   local name = element.name
@@ -421,7 +457,7 @@ function gui.on_closed(event)
     element.destroy()
 
     -- if name:match("%-pick$") and source_info.target.signal then
-    --   source_gui.on_source_main(source, player)
+    --   gui.on_source_main(source, player)
     -- end
   end
 end
@@ -432,12 +468,15 @@ end
 
 function sources.on_init()
   global.sources = {}
-
   sources.on_resources_changed()
+
+  gui.on_init()
 end
 
-function sources.on_configuration_changed()
+function sources.on_configuration_changed(event)
   sources.on_resources_changed()
+
+  gui.on_configuration_changed(event)
 end
 
 return sources
