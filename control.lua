@@ -81,6 +81,9 @@ end)
 
 script.on_event(defines.events.on_research_finished, function(event)
   local force = event.research.force.name
+  if not global.limits or not global.limits[force] then
+    init_force(force)
+  end
   if event.research.name:match("arcade_mode%-unlocker%-unlock") then
     global.limits[force].counter = math.max(global.limits[force].counter, event.research.level + 1)
   elseif event.research.name:match("arcade_mode%-unlocker%-upgrade") then
