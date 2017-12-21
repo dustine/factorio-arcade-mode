@@ -1,6 +1,6 @@
 require 'stdlib/utils/string'
 
-local recipes = {}
+local resources = {}
 local vanilla = require "vanilla"
 
 local function sort_prototype(lht, rht)
@@ -9,11 +9,11 @@ local function sort_prototype(lht, rht)
   else return lht.order < rht.order end
 end
 
-function recipes.sort_resources(t)
+function resources.sort_resources(t)
   table.sort(t, sort_prototype)
 end
 
-function recipes.format_resource_names(items, fluids)
+function resources.format_resource_names(items, fluids)
   fluids = fluids or items.fluids
   items = (items and items.items) or items or {}
 
@@ -31,21 +31,21 @@ function recipes.format_resource_names(items, fluids)
     end end
   end
 
-  recipes.sort_resources(prototypes.items)
-  recipes.sort_resources(prototypes.fluids)
+  resources.sort_resources(prototypes.items)
+  resources.sort_resources(prototypes.fluids)
 
   return prototypes.items, prototypes.fluids
 end
 
-function recipes.get_default_resources()
+function resources.get_default_resources()
   local override = string.split(settings.global["arcade_mode-resources-override"].value, " ")
-  local ov_items, ov_fluids = recipes.format_resource_names(override)
+  local ov_items, ov_fluids = resources.format_resource_names(override)
 
   if #ov_items + #ov_fluids > 0 then return ov_items, ov_fluids
-  else return recipes.format_resource_names(vanilla) end
+  else return resources.format_resource_names(vanilla) end
 end
 
-function recipes.get_proxy(type, level)
+function resources.get_proxy(type, level)
   if type == "item" then
     if level == 1 then return "transport-belt" end
     if level == 2 then return "fast-transport-belt" end
@@ -53,4 +53,4 @@ function recipes.get_proxy(type, level)
   elseif type == "fluid" then return "offshore-pump" end
 end
 
-return recipes
+return resources

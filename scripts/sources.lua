@@ -1,6 +1,6 @@
 -- local Area = require('stdlib/area/area')
 
-local recipes = require("scripts/recipes/recipes")
+local resources = require("scripts/resources/resources")
 
 local sources = {}
 
@@ -109,7 +109,7 @@ local function set_item(source, target)
   source.loader = loader
 
   local belt = source.base.surface.create_entity {
-    name = recipes.get_proxy("item", target.count),
+    name = resources.get_proxy("item", target.count),
     position = offset_pos(source.base, -1),
     force = source.base.force,
     direction = defines.direction.east,
@@ -185,7 +185,7 @@ end
 function sources.on_resources_changed()
   -- reset the resources up to recipe's autogen
   if not global.custom_resources then
-    global.items, global.fluids = recipes.get_default_resources()
+    global.items, global.fluids = resources.get_default_resources()
     return
   end
 end

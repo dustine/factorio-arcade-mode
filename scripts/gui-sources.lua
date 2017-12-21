@@ -1,12 +1,11 @@
-local recipes = require "scripts/recipes/recipes"
+local resources = require "scripts/resources/resources"
 local sources = require "scripts/sources"
-local mod_gui = require "mod-gui"
 
 local gui = {}
 
 gui.version = 1
-gui.name = "arcade_mode-gui_source"
-gui.name_pattern = "arcade_mode%-gui_source"
+gui.name = "arcade_mode-gui_sources"
+gui.name_pattern = "arcade_mode%-gui_sources"
 
 --############################################################################--
 --                                    PICK                                    --
@@ -54,7 +53,7 @@ local function on_gui_pick(source, player)
     direction = "vertical"
   }
 
-  local resources = pick.add {
+  local resources_table = pick.add {
     type = "table",
     name = name.."-resources",
     column_count = 6,
@@ -62,10 +61,10 @@ local function on_gui_pick(source, player)
   }
 
   for _, item in pairs(global.items) do
-    make_smart_slot(resources, name.."-select-item/"..item.name, {name = item.name, type="item"}, "recipe_slot_button")
+    make_smart_slot(resources_table, name.."-select-item/"..item.name, {name = item.name, type="item"}, "recipe_slot_button")
   end
   for i, fluid in pairs(global.fluids) do
-    make_smart_slot(resources, name.."-select-fluid/"..fluid.name, {name = fluid.name, type="fluid"}, "recipe_slot_button")
+    make_smart_slot(resources_table, name.."-select-fluid/"..fluid.name, {name = fluid.name, type="fluid"}, "recipe_slot_button")
   end
 
   local define = pick.add {
@@ -111,7 +110,7 @@ local function update_gui_main(source, player)
   local rate = main[name.."-flow"][name.."-settings"][name.."-rate"]
   rate[name.."-rate-info"].elem_value = (type and {
     type = "item",
-    name = recipes.get_proxy(type, source.target.count)
+    name = resources.get_proxy(type, source.target.count)
   })
   rate[name.."-rate-minus"].enabled = source.target.count > 1
   rate[name.."-rate-plus"].enabled = type and (source.target.count < global.limits[player.force.name].speed[type])
@@ -197,7 +196,7 @@ local function on_gui_main(source, player)
     type = "button",
     name = name.."-rate-minus",
     caption = "-",
-    style = mod_gui.button_style
+    style = "mod_gui_button"
   }
   rate_minus.style.minimal_width = 18
   rate_minus.style.font = "default-large-semibold"
@@ -208,7 +207,7 @@ local function on_gui_main(source, player)
     type = "button",
     name = name.."-rate-plus",
     caption = "+",
-    style = mod_gui.button_style
+    style = "mod_gui_button"
   }
   rate_plus.style.minimal_width = 18
   rate_plus.style.font = "default-large-semibold"
@@ -284,7 +283,7 @@ end
 
 function gui.on_closed(event)
   local element = event.element
-  if not element or not element.name:match("arcade_mode%-gui_source") then return end
+  if not element or not element.name:match(gui.name_pattern) then return end
   element.destroy()
 end
 
