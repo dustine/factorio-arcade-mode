@@ -1,6 +1,6 @@
 -- local Area = require('stdlib/area/area')
 
-local resources = require("scripts/resources/resources")
+local targets = require("scripts/targets/targets")
 
 local sources = {}
 
@@ -45,9 +45,7 @@ function sources.get(entity)
   return global.sources[entity.unit_number]
 end
 
-function sources.delete(entity)
-  local source = sources.get_source(entity)
-
+local function delete(source)
   if source.pump then source.pump.destroy() end
   if source.loader then source.loader.destroy() end
   if source.belt then source.belt.destroy() end
@@ -62,6 +60,10 @@ function sources.delete(entity)
   global.sources[source.base.unit_number] = nil
 end
 
+function sources.delete(entity)
+  delete(sources.get_source(entity))
+end
+
 local function get_cost(source, target)
   if source.free then return 0 end
   return ((target and target.count) or 0) - ((source.target and source.target.count) or 0)
@@ -70,6 +72,15 @@ end
 local function set_cost(source, target)
   local limit = global.limits[source.base.force.name]
   limit.counter = limit.counter - get_cost(source, target)
+end
+
+local function refresh_display(source)
+  local control = source.base.get_or_create_control_behavior()
+  control.set_signal(1, (source.target.signal and source.target) or nil)
+end
+
+function sources.refresh_display(entity)
+  refresh_display(sources.get(entity))
 end
 
 local function reset(source)
@@ -87,7 +98,12 @@ local function reset(source)
   set_cost(source)
   source.free = nil
   source.target = signal_off()
+  refresh_display(source)
 end
+
+--############################################################################--
+--                                    SET                                     --
+--############################################################################--
 
 local function set_item(source, target)
   source.container.set_infinity_filter(1, {
@@ -109,7 +125,7 @@ local function set_item(source, target)
   source.loader = loader
 
   local belt = source.base.surface.create_entity {
-    name = resources.get_proxy("item", target.count),
+    name = targets.get_proxy("item", target.count),
     position = offset_pos(source.base, -1),
     force = source.base.force,
     direction = defines.direction.east,
@@ -147,15 +163,6 @@ local function set_fluid(source, target)
   source.target = target
 end
 
-local function refresh_display(source)
-  local control = source.base.get_or_create_control_behavior()
-  control.set_signal(1, (source.target.signal and source.target) or nil)
-end
-
-function sources.refresh_display(entity)
-  refresh_display(sources.get(entity))
-end
-
 function sources.set_target(entity, player, target)
   local source = global.sources[entity.unit_number]
 
@@ -182,21 +189,35 @@ end
 --                                   EVENTS                                   --
 --############################################################################--
 
-function sources.on_targets_changed()
-  -- reset the resources up to recipe's autogen
-  if not global.custom_targets then
-    global.items, global.fluids = resources.get_default_targets()
-    return
-  end
-end
-
 function sources.on_init()
   global.sources = {}
-  sources.on_targets_changed()
 end
 
-function sources.on_configuration_changed()
-  sources.on_targets_changed()
+function sources.on_targets_changed(event)
+  if not global.sources then return end
+
+  local items = {}
+  local fluids = {}
+
+  for _, i in pairs(event.items) do
+    items[i.name] = true
+  end
+  for _, f in pairs(event.fluids) do
+    fluids[f.name] = true
+  end
+
+  for id, source in pairs(global.sources) do
+    if not source.base.valid then
+      delete(source)
+      global.sources[id] = nil
+    elseif source.target and source.target.signal then
+      if source.target.signal.type == "item" then
+        if not items[source.target.signal.name] then reset(source) end
+      elseif source.target.signal.type == "fluid" then
+        if not fluids[source.target.signal.name] then reset(source) end
+      else reset(source) end
+    end
+  end
 end
 
 return sources

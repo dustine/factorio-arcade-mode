@@ -1,4 +1,4 @@
-local resources = require "scripts/resources/resources"
+local targets = require "scripts/targets/targets"
 local sources = require "scripts/sources"
 
 local gui = {}
@@ -40,7 +40,7 @@ local function on_gui_pick(source, player)
   local name = gui.name.."-pick"
   if player.gui.center[name] then
     player.gui.center[name].destroy()
-    global.sources.open[player.index] = nil
+    global.open_sources[player.index] = nil
     return
   end
 
@@ -53,18 +53,18 @@ local function on_gui_pick(source, player)
     direction = "vertical"
   }
 
-  local resources_table = pick.add {
+  local resources = pick.add {
     type = "table",
     name = name.."-resources",
     column_count = 6,
     style = "slot_table"
   }
 
-  for _, item in pairs(global.items) do
-    make_smart_slot(resources_table, name.."-select-item/"..item.name, {name = item.name, type="item"}, "recipe_slot_button")
+  for _, item in pairs(global.targets.items) do
+    make_smart_slot(resources, name.."-select-item/"..item.name, {name = item.name, type="item"}, "recipe_slot_button")
   end
-  for _, fluid in pairs(global.fluids) do
-    make_smart_slot(resources_table, name.."-select-fluid/"..fluid.name, {name = fluid.name, type="fluid"}, "recipe_slot_button")
+  for _, fluid in pairs(global.targets.fluids) do
+    make_smart_slot(resources, name.."-select-fluid/"..fluid.name, {name = fluid.name, type="fluid"}, "recipe_slot_button")
   end
 
   local define = pick.add {
@@ -76,6 +76,7 @@ local function on_gui_pick(source, player)
   define.style.minimal_width = 32*6+2*5
   define.style.horizontally_stretchable = true
   define.style.horizontally_squashable = true
+  define.style.visible = player.admin
 
   player.opened = pick
 end
@@ -110,7 +111,7 @@ local function update_gui_main(source, player)
   local rate = main[name.."-flow"][name.."-settings"][name.."-rate"]
   rate[name.."-rate-info"].elem_value = (type and {
     type = "item",
-    name = resources.get_proxy(type, source.target.count)
+    name = targets.get_proxy(type, source.target.count)
   })
   rate[name.."-rate-minus"].enabled = source.target.count > 1
   rate[name.."-rate-plus"].enabled = type and (source.target.count < global.limits[player.force.name].speed[type])
@@ -120,7 +121,7 @@ local function on_gui_main(source, player)
   local name = gui.name.."-main"
   if player.gui.center[name] then
     player.gui.center[name].destroy()
-    global.sources.open[player.index] = nil
+    global.open_sources[player.index] = nil
     return
   end
 
@@ -226,7 +227,7 @@ function gui.on_opened(entity, player)
   if not (player and player.valid) then return end
 
   local source = sources.get(entity)
-  global.sources.open[player.index] = source.base
+  global.open_sources[player.index] = source.base
 
   if not source.target.signal then
     on_gui_pick(source, player)
@@ -243,7 +244,7 @@ function gui.on_click(event)
   local element = event.element
   if not(element.valid and element.name:match(gui.name_pattern)) then return end
 
-  local entity = global.sources.open[player.index]
+  local entity = global.open_sources[player.index]
   if not(entity and entity.valid) then
     player.opened.destroy()
     return
@@ -290,7 +291,7 @@ end
 ---------------------------------------------------
 
 function gui.on_init()
-  global.sources.open = {}
+  global.open_sources = {}
 end
 
 function gui.on_configuration_changed()

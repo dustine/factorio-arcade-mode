@@ -3,22 +3,21 @@ MOD.name = "ArcadeMode"
 MOD.if_name = "arcade_mode"
 MOD.interfaces = {}
 MOD.commands = {}
+MOD.events = {}
 -- MOD.config = require "control.config"
 
--- local recipes = require("scripts/recipes/recipes")
-
 require "stdlib/utils/table"
-local resources = require "scripts/resources/resources"
+local targets = require "scripts/targets/targets"
 local sources = require "scripts/sources"
 local gui_sources = require "scripts/gui-sources"
-local gui_targets = require "scripts/gui-resources"
+local gui_targets = require "scripts/gui-targets"
 
 
 MOD.commands.arcmd_counter = function(event)
   local player = game.players[event.player_index]
   local number = tonumber(event.parameter)
 
-  if number then global.counter[player.force.name] = number end
+  if number then global.limits[player.force.name].counter = number end
 end
 
 
@@ -63,13 +62,6 @@ script.on_event(defines.events.on_entity_settings_pasted, function(event)
   end
 end)
 
-script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
-  if event.setting == "arcade_mode-resources-override" then
-    sources.on_targets_changed()
-    game.print({"arcade_mode-on-resource-override"}, {r=0.5, g=0.8, b=1})
-  end
-end)
-
 script.on_event(defines.events.script_raised_built, function(event)
   if event.entity and event.entity.valid and event.entity.name == "arcade_mode-source" then
     sources.finish(event.entity)
@@ -84,6 +76,12 @@ end
 
 script.on_event(defines.events.on_robot_mined_entity, on_mined_entity)
 script.on_event(defines.events.on_player_mined_entity, on_mined_entity)
+
+script.on_event(MOD.events.on_targets_changed, function(event)
+  sources.on_targets_changed(event)
+
+  game.print({"status.arcade_mode-on-targets-changed"}, {r=0.5, g=0.8, b=1})
+end)
 
 script.on_event(defines.events.on_force_created, function(event)
   init_force(event.force)
@@ -122,16 +120,17 @@ script.on_init(function()
     init_force(force)
   end
 
-  resources.on_init()
+  targets.on_init()
   sources.on_init()
   gui_sources.on_init()
   gui_targets.on_init()
 end)
 
-script.on_configuration_changed(function(event)
-  resources.on_init()
-  sources.on_configuration_changed(event)
+script.on_configuration_changed(function()
+  targets.on_configuration_changed()
 end)
+
+script.on_event(defines.events.on_runtime_mod_setting_changed, targets.on_runtime_mod_setting_changed)
 
 remote.add_interface(MOD.if_name, MOD.interfaces)
 for name, command in pairs(MOD.commands) do
