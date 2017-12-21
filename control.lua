@@ -8,9 +8,10 @@ MOD.commands = {}
 -- local recipes = require("scripts/recipes/recipes")
 
 require "stdlib/utils/table"
+local resources = require "scripts/resources/resources"
 local sources = require "scripts/sources"
 local gui_sources = require "scripts/gui-sources"
-local gui_recipes = require "scripts/gui-recipes"
+local gui_targets = require "scripts/gui-resources"
 
 
 MOD.commands.arcmd_counter = function(event)
@@ -64,7 +65,7 @@ end)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   if event.setting == "arcade_mode-resources-override" then
-    sources.on_resources_changed()
+    sources.on_targets_changed()
     game.print({"arcade_mode-on-resource-override"}, {r=0.5, g=0.8, b=1})
   end
 end)
@@ -100,12 +101,16 @@ end)
 
 script.on_event(defines.events.on_gui_click, function(event)
   gui_sources.on_click(event)
-  gui_recipes.on_click(event)
+  gui_targets.on_click(event)
 end)
 
 script.on_event(defines.events.on_gui_closed, function(event)
   gui_sources.on_closed(event)
-  gui_recipes.on_closed(event)
+  gui_targets.on_closed(event)
+end)
+
+script.on_event(defines.events.on_gui_elem_changed, function(event)
+  gui_targets.on_elem_changed(event)
 end)
 
 --############################################################################--
@@ -117,10 +122,14 @@ script.on_init(function()
     init_force(force)
   end
 
+  resources.on_init()
   sources.on_init()
+  gui_sources.on_init()
+  gui_targets.on_init()
 end)
 
 script.on_configuration_changed(function(event)
+  resources.on_init()
   sources.on_configuration_changed(event)
 end)
 

@@ -43,7 +43,6 @@ script.on_init(function()
     end
 
   surface.map_gen_settings = settings
-  log(serpent.block(surface.map_gen_settings))
 
   for chunk in surface.get_chunks() do
     if chunk.x >= 0 then surface.delete_chunk(chunk) end

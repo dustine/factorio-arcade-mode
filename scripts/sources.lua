@@ -182,21 +182,21 @@ end
 --                                   EVENTS                                   --
 --############################################################################--
 
-function sources.on_resources_changed()
+function sources.on_targets_changed()
   -- reset the resources up to recipe's autogen
-  if not global.custom_resources then
-    global.items, global.fluids = resources.get_default_resources()
+  if not global.custom_targets then
+    global.items, global.fluids = resources.get_default_targets()
     return
   end
 end
 
 function sources.on_init()
   global.sources = {}
-  sources.on_resources_changed()
+  sources.on_targets_changed()
 end
 
 function sources.on_configuration_changed()
-  sources.on_resources_changed()
+  sources.on_targets_changed()
 end
 
 return sources

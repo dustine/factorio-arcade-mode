@@ -63,7 +63,7 @@ local function on_gui_pick(source, player)
   for _, item in pairs(global.items) do
     make_smart_slot(resources_table, name.."-select-item/"..item.name, {name = item.name, type="item"}, "recipe_slot_button")
   end
-  for i, fluid in pairs(global.fluids) do
+  for _, fluid in pairs(global.fluids) do
     make_smart_slot(resources_table, name.."-select-fluid/"..fluid.name, {name = fluid.name, type="fluid"}, "recipe_slot_button")
   end
 
@@ -180,6 +180,7 @@ local function on_gui_main(source, player)
     name = name.."-target-reset",
     sprite = "utility/reset",
     style = "slot_button",
+    tooltip = {"gui-caption.arcade_mode-main-target-reset"}
   }
 
   ---------------------------------------- SETTINGS-RATE
@@ -190,7 +191,6 @@ local function on_gui_main(source, player)
     column_count = 3,
   }
   rate.style.horizontal_spacing = 0
-  -- rate.style.top_padding = 5
 
   local rate_minus = rate.add {
     type = "button",
@@ -238,7 +238,7 @@ end
 function gui.on_click(event)
   local player = game.players[event.player_index]
 
-  if not player or player.valid then return end
+  if not(player and player.valid) then return end
 
   local element = event.element
   if not(element.valid and element.name:match(gui.name_pattern)) then return end
@@ -258,32 +258,32 @@ function gui.on_click(event)
         type = match:match("^(.+)/"),
         name = match:match("/(.+)$")
     }}) then
-      gui.on_source_main(source, player)
+      on_gui_main(source, player)
     end
     return
   end
 
   if element.name:match("%-main%-target%-reset$") then
     sources.set_target(entity)
-    gui.on_source_pick(source, player)
+    on_gui_pick(source, player)
   elseif element.name:match("%-main%-rate%-minus$") then
     sources.set_target(entity, player, {
       signal = source.target.signal,
       count = source.target.count - 1
     }, player)
-    gui.update_source_main(source, player)
+    update_gui_main(source, player)
   elseif element.name:match("%-main%-rate%-plus$") then
     sources.set_target(entity, player, {
       signal = source.target.signal,
       count = source.target.count + 1
     })
-    gui.update_source_main(source, player)
+    update_gui_main(source, player)
   end
 end
 
 function gui.on_closed(event)
   local element = event.element
-  if not element or not element.name:match(gui.name_pattern) then return end
+  if not(element and element.valid and element.name:match(gui.name_pattern)) then return end
   element.destroy()
 end
 
