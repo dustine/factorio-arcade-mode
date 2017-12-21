@@ -8,7 +8,18 @@ MOD.commands = {}
 -- local recipes = require("scripts/recipes/recipes")
 
 require "stdlib/utils/table"
-local sources = require("scripts/sources")
+local sources = require "scripts/sources"
+local gui_sources = require "scripts/gui-sources"
+local gui_recipes = require "scripts/gui-recipes"
+
+
+MOD.commands.arcmd_counter = function(event)
+  local player = game.players[event.player_index]
+  local number = tonumber(event.parameter)
+
+  if number then global.counter[player.force.name] = number end
+end
+
 
 local function init_force(force)
   global.limits = global.limits or {}
@@ -21,36 +32,17 @@ local function init_force(force)
   }
 end
 
-script.on_init(function()
-  for _, force in pairs(game.forces) do
+script.on_event(defines.events.on_research_finished, function(event)
+  local force = event.research.force.name
+  if not global.limits or not global.limits[force] then
     init_force(force)
   end
-
-  sources.on_init()
-end)
-
-script.on_configuration_changed(function(event)
-  sources.on_configuration_changed(event)
-end)
-
-MOD.commands.setcounter = function(event)
-  local player = game.players[event.player_index]
-  local number = tonumber(event.parameter)
-
-  if number then global.counter[player.force.name] = number end
-end
-
---[[script_raised_built]]
-
-local function on_script_raised_built(event)
-  if event.entity and event.entity.valid and event.entity.name == "arcade_mode-source" then
-    sources.finish(event.entity)
+  if event.research.name:match("arcade_mode%-unlock") then
+    global.limits[force].counter = math.max(global.limits[force].counter, event.research.level + 1)
+  elseif event.research.name:match("arcade_mode%-upgrade") then
+    global.limits[force].speed.item = math.max(global.limits[force].speed.item, event.research.level + 1)
   end
-end
-
-script.on_event(defines.events.script_raised_built, on_script_raised_built)
-
---[[others]]
+end)
 
 script.on_event(defines.events.on_entity_settings_pasted, function(event)
   if event.destination.name ~= "arcade_mode-source" then return end
@@ -70,27 +62,6 @@ script.on_event(defines.events.on_entity_settings_pasted, function(event)
   end
 end)
 
--- script.on_event(defines.events.on_player_created, function(event)
---   validate_filter(game.players[event.player_index])
---   arcade_gui.on_player_created(event)
--- end)
-
-script.on_event(defines.events.on_force_created, function(event)
-  init_force(event.force)
-end)
-
-script.on_event(defines.events.on_research_finished, function(event)
-  local force = event.research.force.name
-  if not global.limits or not global.limits[force] then
-    init_force(force)
-  end
-  if event.research.name:match("arcade_mode%-unlock") then
-    global.limits[force].counter = math.max(global.limits[force].counter, event.research.level + 1)
-  elseif event.research.name:match("arcade_mode%-upgrade") then
-    global.limits[force].speed.item = math.max(global.limits[force].speed.item, event.research.level + 1)
-  end
-end)
-
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   if event.setting == "arcade_mode-resources-override" then
     sources.on_resources_changed()
@@ -98,7 +69,11 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   end
 end)
 
---[[ on_*_mined ]]
+script.on_event(defines.events.script_raised_built, function(event)
+  if event.entity and event.entity.valid and event.entity.name == "arcade_mode-source" then
+    sources.finish(event.entity)
+  end
+end)
 
 local function on_mined_entity(event)
   local entity = event.entity
@@ -109,19 +84,45 @@ end
 script.on_event(defines.events.on_robot_mined_entity, on_mined_entity)
 script.on_event(defines.events.on_player_mined_entity, on_mined_entity)
 
--- [[ GUI ]]
+script.on_event(defines.events.on_force_created, function(event)
+  init_force(event.force)
+end)
 
-script.on_event(defines.events.on_gui_click, sources.gui.on_click)
+--############################################################################--
+--                                    GUI                                     --
+--############################################################################--
 
 script.on_event(defines.events.on_gui_opened, function(event)
   if event.entity and event.entity.name == "arcade_mode-source" then
-    sources.gui.on_source_opened(event.entity, game.players[event.player_index])
+    gui_sources.on_opened(event.entity, game.players[event.player_index])
   end
 end)
 
-script.on_event(defines.events.on_gui_closed, sources.gui.on_closed)
+script.on_event(defines.events.on_gui_click, function(event)
+  gui_sources.on_click(event)
+  gui_recipes.on_click(event)
+end)
 
--- [[interfaces]]
+script.on_event(defines.events.on_gui_closed, function(event)
+  gui_sources.on_closed(event)
+  gui_recipes.on_closed(event)
+end)
+
+--############################################################################--
+--                                 INTERFACES                                 --
+--############################################################################--
+
+script.on_init(function()
+  for _, force in pairs(game.forces) do
+    init_force(force)
+  end
+
+  sources.on_init()
+end)
+
+script.on_configuration_changed(function(event)
+  sources.on_configuration_changed(event)
+end)
 
 remote.add_interface(MOD.if_name, MOD.interfaces)
 for name, command in pairs(MOD.commands) do

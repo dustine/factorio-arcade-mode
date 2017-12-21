@@ -4,6 +4,7 @@ Based on [this suggested game mode/scenario](https://www.reddit.com/r/factorio/c
 
 ## To-Do
 
+- Infinity containers don't auto-gen (lag?)
 - In-game menu for setting resources
 - Overhead counter of charges?
 - Add support for custom loaders/belts
