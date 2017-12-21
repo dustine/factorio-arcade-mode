@@ -3,22 +3,21 @@ local Prototype = require "prototypes/prototype"
 local base = table.deepcopy(data.raw["constant-combinator"]["constant-combinator"])
 base.name = "arcade_mode-source"
 base.icon = "__ArcadeMode__/graphics/source/icon-item.png"
--- base.minable = {mining_time = 1, result = "arcade_mode-source"}
+base.minable = {mining_time = 1, result = "arcade_mode-source"}
 base.collision_box = {{-1.9, -0.4}, {1.9, 0.4}}
 base.selection_box = {{-2.0, -0.5}, {2.0, 0.5}}
 -- base.selection_priority = 50
 base.collision_mask = {"player-layer"}
 base.item_slot_count = 1
--- base.selectable_in_game = false
+
 base.circuit_wire_max_distance = 0
--- base.sprites = {
---   filename = "__ArcadeMode__/graphics/source/icon-item.png",
---   width = 32,
---   height = 32,
---   direction_count = 1,
---   shift = util.by_pixel(-32, 0)
--- }
-base.sprites = Prototype.empty_sprite()
+base.sprites = {
+  filename = "__ArcadeMode__/graphics/source/off.png",
+  width = 32*4,
+  height = 32,
+  direction_count = 1,
+  -- shift = util.by_pixel(-32, 0)
+}
 base.activity_led_sprites = Prototype.empty_sprite()
 
 local container = {
@@ -32,7 +31,7 @@ local container = {
   erase_contents_when_mined = true,
   inventory_size = 1,
   selectable_in_game = false,
-  picture = Prototype.empty_sprite(),
+  picture = Prototype.empty_sprite()
 }
 
 local item = {
@@ -69,14 +68,14 @@ local function generate_loader(index, speed, color)
   loader.structure.direction_out.west = {
     layers = {{
       filename = "__ArcadeMode__/graphics/source/item.png",
-      width = 32*3,
+      width = 32*4,
       height = 32,
-      shift = util.by_pixel(-16, 0),
+      -- shift = util.by_pixel(-32, 0),
     },{
       filename = "__ArcadeMode__/graphics/source/item-tint.png",
-      width = 96,
+      width = 32*4,
       height = 32,
-      shift = util.by_pixel(16, 0),
+      -- shift = util.by_pixel(-32, 0),
       tint = color
     }}
   }
@@ -110,15 +109,15 @@ local function generate_fluid_source(fluid)
   source.picture = {
     layers = {{
       filename = "__ArcadeMode__/graphics/source/fluid.png",
-      width = 32*3,
+      width = 32*4,
       height = 32,
-      shift = util.by_pixel(32, 0),
+      shift = util.by_pixel(32+16, 0),
     }, {
       filename = "__ArcadeMode__/graphics/source/fluid-tint.png",
-      width = 96,
+      width = 32*4,
       height = 32,
       tint = fluid.base_color,
-      shift = util.by_pixel(32, 0)
+      shift = util.by_pixel(32+16, 0)
     }}
   }
   source.picture.layers[2].tint.a = 0.5
@@ -129,3 +128,107 @@ end
 
 MOD.ArcadeMode.generate_loader = generate_loader
 MOD.ArcadeMode.generate_fluid_source = generate_fluid_source
+
+--[[ TECH ]]
+
+local unlock_template = {
+  type = "technology",
+  name = "arcade_mode-unlock-",
+  icon = "__ArcadeMode__/graphics/source/unlock.png",
+  icon_size = 128,
+  effects = {{
+    type = "nothing",
+    effect_description = {"technology-effect.arcade_mode-unlock"}
+  }},
+  upgrade = true,
+  order = "z-[ArcadeMode]-a-a"
+}
+
+local last_unlock = 0
+local next_unlock = 1
+local function make_unlock(science_packs, formula, max_level)
+  local unlock = table.deepcopy(unlock_template)
+  unlock.name = unlock.name..next_unlock
+  unlock.unit = {
+    count_formula = formula,
+    ingredients = {},
+    time = 60,
+  }
+  unlock.max_level = tostring(max_level)
+  for _, type in pairs(science_packs) do
+    table.insert(unlock.unit.ingredients, {type, 1})
+  end
+  if last_unlock > 0 then
+    unlock.prerequisites = {"arcade_mode-unlock-"..last_unlock}
+  end
+
+  data:extend{unlock}
+  last_unlock = next_unlock
+  if max_level ~= "infinite" then
+    next_unlock = max_level + 1
+  end
+end
+
+make_unlock({"science-pack-1"}, "240", 1)
+make_unlock({"science-pack-1", "science-pack-2"}, "80*L", 7)
+
+data:extend {{
+  type = "technology",
+  name = "arcade_mode-upgrade-1",
+  icon = "__ArcadeMode__/graphics/source/upgrade-1.png",
+  icon_size = 128,
+  unit = {
+    count_formula = "240",
+    ingredients = {
+      {"science-pack-1", 1},
+      {"science-pack-2", 1},
+    },
+    time = 60
+  },
+  prerequisites = {"arcade_mode-unlock-2", "logistics-2"},
+  effects = {{
+    type = "nothing",
+    effect_description = {"technology-effect.arcade_mode-upgrade", {"entity-name.fast-transport-belt"}}
+  }}
+}}
+
+make_unlock({"science-pack-1", "science-pack-2", "science-pack-3"}, "20*L", 49)
+make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack"}, "10*L", 99)
+
+data:extend {{
+  type = "technology",
+  name = "arcade_mode-upgrade-2",
+  icon = "__ArcadeMode__/graphics/source/upgrade-2.png",
+  icon_size = 128,
+  unit = {
+    count_formula = "600",
+    ingredients = {
+      {"science-pack-1", 1},
+      {"science-pack-2", 1},
+      {"science-pack-3", 1},
+      {"production-science-pack", 1},
+    },
+    time = 60
+  },
+  prerequisites = {"arcade_mode-unlock-50", "arcade_mode-upgrade-1", "logistics-3"},
+  effects = {{
+    type = "nothing",
+    effect_description = {"technology-effect.arcade_mode-upgrade", {"entity-name.express-transport-belt"}}
+  }},
+  upgrade = true
+}}
+
+make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack", "high-tech-science-pack"}, "5*L", 249)
+make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack", "high-tech-science-pack", "space-science-pack"}, "2*L", "infinite")
+
+--[[
+  {"science-pack-1", 1},
+  {"science-pack-2", 1},
+  {"science-pack-3", 1},
+  {"military-science-pack", 1},
+  {"production-science-pack", 1},
+  {"high-tech-science-pack", 1},
+  {"space-science-pack", 1},
+
+  time = 20, 30, 60
+]]

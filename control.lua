@@ -84,17 +84,17 @@ script.on_event(defines.events.on_research_finished, function(event)
   if not global.limits or not global.limits[force] then
     init_force(force)
   end
-  if event.research.name:match("arcade_mode%-unlocker%-unlock") then
+  if event.research.name:match("arcade_mode%-unlock") then
     global.limits[force].counter = math.max(global.limits[force].counter, event.research.level + 1)
-  elseif event.research.name:match("arcade_mode%-unlocker%-upgrade") then
-    global.limits[force].speed.item = math.max(global.limits[force].speed.item,event.research.level + 1)
+  elseif event.research.name:match("arcade_mode%-upgrade") then
+    global.limits[force].speed.item = math.max(global.limits[force].speed.item, event.research.level + 1)
   end
 end)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   if event.setting == "arcade_mode-resources-override" then
     sources.on_resources_changed()
-    game.print("Resources changed", {r=5, g=0.8, b=1})
+    game.print({"arcade_mode-on-resource-override"}, {r=0.5, g=0.8, b=1})
   end
 end)
 
