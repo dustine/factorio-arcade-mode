@@ -3,7 +3,7 @@ local sources = require "scripts/sources"
 
 local gui = {}
 
-gui.version = 1
+-- gui.version = 1
 gui.name = "arcade_mode-gui_sources"
 gui.name_pattern = "arcade_mode%-gui_sources"
 

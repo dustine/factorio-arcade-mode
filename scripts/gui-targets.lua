@@ -2,7 +2,7 @@ local targets = require "scripts/targets/targets"
 
 local gui = {}
 
-gui.version = 1
+-- gui.version = 1
 gui.name = "arcade_mode-gui_targets"
 gui.name_pattern = "arcade_mode%-gui_targets"
 
