@@ -2,7 +2,7 @@ local Prototype = require "prototypes/prototype"
 
 local base = table.deepcopy(data.raw["constant-combinator"]["constant-combinator"])
 base.name = "arcade_mode-source"
-base.icon = "__ArcadeMode__/graphics/source/icon-item.png"
+base.icon = "__ArcadeMode__/graphics/entity/source/icon-item.png"
 base.minable = {mining_time = 1, result = "arcade_mode-source"}
 base.collision_box = {{-1.9, -0.49}, {1.9, 0.49}}
 base.selection_box = {{-2.0, -0.5}, {2.0, 0.5}}
@@ -12,7 +12,7 @@ base.item_slot_count = 1
 
 base.circuit_wire_max_distance = 0
 base.sprites = {
-  filename = "__ArcadeMode__/graphics/source/off.png",
+  filename = "__ArcadeMode__/graphics/entity/source/off.png",
   width = 32*4,
   height = 32,
   direction_count = 1,
@@ -22,7 +22,7 @@ base.activity_led_sprites = Prototype.empty_sprite()
 
 local container = {
   type = "infinity-container",
-  icon = "__ArcadeMode__/graphics/source/icon-item-container.png",
+  icon = "__ArcadeMode__/graphics/entity/source/icon-item-container.png",
   icon_size = 32,
   name = "arcade_mode-source_item-container",
   flags = {"not-on-map", "player-creation"},
@@ -38,7 +38,7 @@ local item = {
   type = "item",
   name = "arcade_mode-source",
   flags = {"goes-to-quickbar", "hidden"},
-  icon = "__ArcadeMode__/graphics/source/icon-item.png",
+  icon = "__ArcadeMode__/graphics/entity/source/icon-item.png",
   icon_size = 32,
   place_result = "arcade_mode-source",
   stack_size = 10,
@@ -55,7 +55,7 @@ local function generate_loader(index, speed, color)
   loader.flags = {"not-on-map", "player-creation"}
   loader.icon = nil
   loader.icons = {{
-    icon = "__ArcadeMode__/graphics/source/icon-item-loader.png",
+    icon = "__ArcadeMode__/graphics/entity/source/icon-item-loader.png",
     width = 32,
     height = 32,
     tint = color
@@ -67,12 +67,12 @@ local function generate_loader(index, speed, color)
   loader.structure.direction_out = Prototype.empty_sheet()
   loader.structure.direction_out.west = {
     layers = {{
-      filename = "__ArcadeMode__/graphics/source/item.png",
+      filename = "__ArcadeMode__/graphics/entity/source/item.png",
       width = 32*4,
       height = 32,
       -- shift = util.by_pixel(-32, 0),
     },{
-      filename = "__ArcadeMode__/graphics/source/item-tint.png",
+      filename = "__ArcadeMode__/graphics/entity/source/item-tint.png",
       width = 32*4,
       height = 32,
       -- shift = util.by_pixel(-32, 0),
@@ -104,16 +104,16 @@ local function generate_fluid_source(fluid)
   source.collision_mask = { "object-layer", "player-layer" }
   -- source.fluid_box_tile_collision_test = { "water-tile" },
   -- source.adjacent_tile_collision_test = { "water-tile" },
-  source.icon = "__ArcadeMode__/graphics/source/icon-fluid.png"
+  source.icon = "__ArcadeMode__/graphics/entity/source/icon-fluid.png"
   source.circuit_wire_max_distance = 0
   source.picture = {
     layers = {{
-      filename = "__ArcadeMode__/graphics/source/fluid.png",
+      filename = "__ArcadeMode__/graphics/entity/source/fluid.png",
       width = 32*4,
       height = 32,
       shift = util.by_pixel(32+16, 0),
     }, {
-      filename = "__ArcadeMode__/graphics/source/fluid-tint.png",
+      filename = "__ArcadeMode__/graphics/entity/source/fluid-tint.png",
       width = 32*4,
       height = 32,
       tint = fluid.base_color,
@@ -134,7 +134,7 @@ MOD.ArcadeMode.generate_fluid_source = generate_fluid_source
 local unlock_template = {
   type = "technology",
   name = "arcade_mode-unlock-",
-  icon = "__ArcadeMode__/graphics/source/unlock.png",
+  icon = "__ArcadeMode__/graphics/entity/source/unlock.png",
   icon_size = 128,
   effects = {{
     type = "nothing",
@@ -175,7 +175,7 @@ make_unlock({"science-pack-1", "science-pack-2"}, "80*L", 7)
 data:extend {{
   type = "technology",
   name = "arcade_mode-upgrade-1",
-  icon = "__ArcadeMode__/graphics/source/upgrade-1.png",
+  icon = "__ArcadeMode__/graphics/entity/source/upgrade-1.png",
   icon_size = 128,
   unit = {
     count_formula = "240",
@@ -198,7 +198,7 @@ make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-s
 data:extend {{
   type = "technology",
   name = "arcade_mode-upgrade-2",
-  icon = "__ArcadeMode__/graphics/source/upgrade-2.png",
+  icon = "__ArcadeMode__/graphics/entity/source/upgrade-2.png",
   icon_size = 128,
   unit = {
     count_formula = "600",
