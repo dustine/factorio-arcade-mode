@@ -4,20 +4,26 @@ local base = table.deepcopy(data.raw["constant-combinator"]["constant-combinator
 base.name = "arcade_mode-source"
 base.icon = "__ArcadeMode__/graphics/entity/source/icon-item.png"
 base.minable = {mining_time = 1, result = "arcade_mode-source"}
-base.collision_box = {{-1.9, -0.49}, {1.9, 0.49}}
+base.collision_box = {{-1.8, -0.4}, {1.8, 0.4}}
 base.selection_box = {{-2.0, -0.5}, {2.0, 0.5}}
--- base.selection_priority = 50
-base.collision_mask = {"player-layer"}
+base.collision_mask = {"object-layer", "player-layer"}
 base.item_slot_count = 1
+
+log(serpent.block(data.raw["constant-combinator"]["constant-combinator"].sprites))
 
 base.circuit_wire_max_distance = 0
 base.sprites = {
-  filename = "__ArcadeMode__/graphics/entity/source/off.png",
-  width = 32*4,
-  height = 32,
-  direction_count = 1,
-  -- shift = util.by_pixel(-32, 0)
+  north = {
+    filename = "__ArcadeMode__/graphics/entity/source/off.png",
+    width = 32*4,
+    height = 32,
+    direction_count = 1,
+  },
+  south = Prototype.empty_sprite(),
+  east = Prototype.empty_sprite(),
+  west = Prototype.empty_sprite(),
 }
+-- base.sprites.west = table.deepcopy(base.sprites.east)
 base.activity_led_sprites = Prototype.empty_sprite()
 
 local container = {
@@ -28,10 +34,17 @@ local container = {
   flags = {"not-on-map", "player-creation"},
   collision_box = {{-0.4, -0.4}, {0.4, 0.4}},
   selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
+  -- collision_mask = {},
   erase_contents_when_mined = true,
   inventory_size = 1,
   selectable_in_game = false,
-  picture = Prototype.empty_sprite()
+  gui_mode = "none",
+  picture = {
+    filename = "__ArcadeMode__/graphics/entity/source/item.png",
+    width = 32,
+    height = 32,
+    -- shift = util.by_pixel(-32, 0),
+  }
 }
 
 local item = {
@@ -68,13 +81,15 @@ local function generate_loader(index, speed, color)
   loader.structure.direction_out.west = {
     layers = {{
       filename = "__ArcadeMode__/graphics/entity/source/item.png",
-      width = 32*4,
+      width = 32*2,
       height = 32,
+      x = 32
       -- shift = util.by_pixel(-32, 0),
     },{
       filename = "__ArcadeMode__/graphics/entity/source/item-tint.png",
-      width = 32*4,
+      width = 32*2,
       height = 32,
+      x = 32,
       -- shift = util.by_pixel(-32, 0),
       tint = color
     }}

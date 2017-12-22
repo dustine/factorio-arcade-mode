@@ -17,7 +17,7 @@ script.on_init(function()
   silo_script.on_init()
 
   -- 730116874
-  -- 1238446447
+  -- 3362467784
 
   -- whitelist, make it into a set
   local whitelist = {"desert", "dirt", "enemy-base", "grass", "sand"}
@@ -28,11 +28,9 @@ script.on_init(function()
 
   local surface = game.surfaces.nauvis
   local settings = surface.map_gen_settings
-  log(serpent.block(surface.map_gen_settings))
   settings.water = "none"
   settings.cliff_settings.cliff_elevation_0 = 1024
   settings.default_enable_all_autoplace_controls = false
-
   for name, control in pairs(settings.autoplace_controls) do
     if whiteset[name] then
       if name == "enemy-base" and control.size ~= "none" then
@@ -41,16 +39,15 @@ script.on_init(function()
       end
     else
       settings.autoplace_controls[name] = nil
-      end
     end
-
+  end
   surface.map_gen_settings = settings
 
   for chunk in surface.get_chunks() do
     if chunk.x >= 0 then surface.delete_chunk(chunk) end
   end
 
-  game.forces.player.set_spawn_position({-1,0}, "nauvis")
+  game.forces.player.set_spawn_position({-1,0}, surface.name)
 end)
 
 script.on_configuration_changed(function(event)
@@ -63,91 +60,90 @@ end)
 
 --[[on_chunk_generated]]
 
-local function generate_empty_chunk(event)
-  -- clean off!
-  local tiles = {}
-  for x,y in Area.iterate(Area.shrink(event.area, 0.5)) do
-    table.insert(tiles, {
-      name = "out-of-map",
-      position = Position.construct(x, y)
-    })
-  end
-  event.surface.set_tiles(tiles, false)
+local function get_edge_type_type(x, y)
+  if x < -4 then return "out-of-map"
+  elseif x > 0 then return nil
+  elseif y > 2 or y < -2 then return "arcade_mode-edge"
+  elseif x < -2 then return "arcade_mode-edge" end
 end
 
-local function generate_spawner_chunk(event, chunk)
-  local surface = event.surface
-  local area = event.area
-  local force = game.forces.player
+local function place_source(position, surface, force)
+  local source = surface.create_entity {
+    name = "arcade_mode-source",
+    position = position,
+    force = force
+  }
+  source.destructible = false
+  source.rotatable = false
+  source.minable = false
+  script.raise_event(defines.events.script_raised_built, {entity = source})
+end
 
-  -- set the stable bedrock
-  local pavement = Area.shrink(event.area, 0.5)
-  local tiles = {}
-  for x,y in Area.iterate(pavement) do
-    if x % 32 < 28 then
-      table.insert(tiles, {
-        name = "out-of-map",
-        position = Position.construct(x, y)
-      })
-    elseif x % 32 > 31 then
-      table.insert(tiles, {
-        name = "hazard-concrete-right",
-        position = Position.construct(x, y)
-      })
-    else
-      table.insert(tiles, {
-        name = "concrete",
-        position = Position.construct(x, y)
-      })
-    end
-  end
-  event.surface.set_tiles(tiles)
-  for _, entity in pairs(surface.find_entities(event.area)) do
-    if entity.valid and entity.type ~= "player" then entity.destroy() end
-  end
-
-  local min = ((chunk.y == 0 or chunk.y == -1) and 3) or 1
-  local iterator = Position.increment({area.right_bottom.x-2.5, area.left_top.y-0.5}, 0, 1)
-  if chunk.y == 0 then iterator(nil, 2) end
-
-  for i=min,32 do
-    local source = surface.create_entity {
-      name = "arcade_mode-source",
-      position = iterator(),
-      force = force
-    }
-    source.destructible = false
-    source.minable = false
-    script.raise_event(defines.events.script_raised_built, {entity = source})
-  end
+local function should_place_source(y)
+  return y > 3 or y < -3
 end
 
 script.on_event(defines.events.on_chunk_generated, function(event)
-  local chunk = Chunk.from_position(Area.center(event.area))
-  if chunk.x >= 0 then
-    if chunk.x * chunk.x + chunk.y * chunk.y > 100 then return end
-    -- erase water with dry dirt
-    local water = event.surface.find_tiles_filtered {name = "water"}
-    local deep_water = event.surface.find_tiles_filtered {name = "deepwater"}
+  local surface = event.surface
+  if not(surface.valid and surface.name == "nauvis") then return end
 
-    local dry_dirt = {}
-    for _, t in pairs(deep_water) do
-      table.insert(dry_dirt, {
-        name = "dry-dirt",
-        position = t.position
-      })
+  local chunk = Chunk.from_position(Area.center(event.area))
+  local force = game.forces.player
+  local area = Area.shrink(event.area, 0.5)
+
+  if chunk.x < 0 then
+    -- void-containing chunk
+    local tiles = {}
+    for x,y in Area.iterate(area) do
+      local name = get_edge_type_type(x,y)
+      if name then
+        table.insert(tiles, {
+          position = Position.construct(x, y),
+          name = name
+        })
+      end
     end
-    for _, t in pairs(water) do
-      table.insert(dry_dirt, {
-        name = "dry-dirt",
-        position = t.position
-      })
+    surface.set_tiles(tiles)
+
+    if chunk.x == -1 then
+      -- add sources
+      for _, entity in pairs(event.surface.find_entities(area)) do
+        if entity.valid and entity.type ~= "player" then entity.destroy() end
+      end
+
+      for y = area.left_top.y, area.left_top.y+31 do
+        -- logic for leaving the spawning alcove
+        if should_place_source(y) then
+          place_source({-2.5, y}, surface, force)
+        end
+      end
     end
-    event.surface.set_tiles(dry_dirt)
-  elseif chunk.x == -1 then
-    generate_spawner_chunk(event, chunk)
-  else
-    generate_empty_chunk(event, chunk)
+  elseif chunk.x * chunk.x + chunk.y * chunk.y <= 400 then
+    -- erase water with dry dirt
+    local water_tile_types = {"water", "deepwater", "water-green", "deepwater-green"}
+    local water_tiles = {}
+    local deleted_sources = {}
+    for _, water in pairs(water_tile_types) do
+      for _, t in pairs(event.surface.find_tiles_filtered {name = water}) do
+        local x = t.position.x+0.5
+        local y = t.position.y+0.5
+
+        if x < 0 and should_place_source(y) then
+          deleted_sources[y] = true
+        end
+
+        table.insert(water_tiles, {
+          name = get_edge_type_type(x, y) or "dry-dirt",
+          position = t.position
+        })
+      end
+    end
+    surface.set_tiles(water_tiles)
+
+    -- place any sources deleted by the water
+    for y, _ in pairs(deleted_sources) do
+      place_source({-2.5, y}, surface, force)
+    end
   end
 end)
 

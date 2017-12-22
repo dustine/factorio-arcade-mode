@@ -62,11 +62,7 @@ script.on_event(defines.events.on_entity_settings_pasted, function(event)
   end
 end)
 
-script.on_event(defines.events.script_raised_built, function(event)
-  if event.entity and event.entity.valid and event.entity.name == "arcade_mode-source" then
-    sources.finish(event.entity)
-  end
-end)
+script.on_event(defines.events.script_raised_built, sources.on_script_raised_built)
 
 local function on_mined_entity(event)
   local entity = event.entity
