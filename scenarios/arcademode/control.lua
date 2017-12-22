@@ -17,6 +17,7 @@ script.on_init(function()
   silo_script.on_init()
 
   -- 730116874
+  -- 1238446447
 
   -- whitelist, make it into a set
   local whitelist = {"desert", "dirt", "enemy-base", "grass", "sand"}
@@ -27,6 +28,7 @@ script.on_init(function()
 
   local surface = game.surfaces.nauvis
   local settings = surface.map_gen_settings
+  log(serpent.block(surface.map_gen_settings))
   settings.water = "none"
   settings.cliff_settings.cliff_elevation_0 = 1024
   settings.default_enable_all_autoplace_controls = false
@@ -48,7 +50,7 @@ script.on_init(function()
     if chunk.x >= 0 then surface.delete_chunk(chunk) end
   end
 
-  game.forces.player.set_spawn_position({-2,0}, "nauvis")
+  game.forces.player.set_spawn_position({-1,0}, "nauvis")
 end)
 
 script.on_configuration_changed(function(event)
@@ -153,6 +155,8 @@ end)
 
 script.on_event(defines.events.on_player_created, function(event)
   local player = game.players[event.player_index]
+  -- fixes death spawn
+  player.teleport(player.force.get_spawn_position("nauvis"))
   player.insert{name="iron-plate", count = 8}
   player.insert{name="pistol", count = 1}
   player.insert{name="firearm-magazine", count = 10}

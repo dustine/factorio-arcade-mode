@@ -22,6 +22,7 @@ local function update_gui_define(player, override)
   local info = global.temp_targets[player.index]
 
   if override then
+    info.resources = {}
     for _, item in pairs(override.items) do
       table.insert(info.resources, {name = item.name, type="item"})
     end
@@ -136,7 +137,7 @@ function gui.on_click(event)
   elseif element.name:match("%-define%-save$") then
     if info.reset then targets.set_custom_targets()
     else targets.set_custom_targets(info.resources) end
-    update_gui_define(player)
+    update_gui_define(player, targets.get())
   end
 end
 

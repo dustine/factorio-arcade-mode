@@ -15,35 +15,43 @@ local function sort_prototype(lht, rht)
   else return lht.order < rht.order end
 end
 
-local function sort_prototypes(t)
-  table.sort(t, sort_prototype)
+local function sort_prototypes(unsorted)
+  local result = {}
+  -- for keyed table
+  for _, v in pairs(unsorted) do
+    table.insert(result, v)
+  end
+  table.sort(result, sort_prototype)
+  return result
 end
 
 local function to_prototypes(items, fluids)
   fluids = fluids or items.fluids
   items = (items and items.items) or items or {}
 
-  local prototypes = {items = {}, fluids = {}}
+  -- using keys to trim repeats
+  local unsorted = {items = {}, fluids = {}}
   for _, i in pairs(items) do
     local name = (type(i) == "table" and i.name) or i
     if game.item_prototypes[name] then
-      table.insert(prototypes.items, game.item_prototypes[name])
+      unsorted.items[name] = game.item_prototypes[name]
     elseif not fluids and game.fluid_prototypes[name] then
-      table.insert(prototypes.fluids, game.fluid_prototypes[name])
+      unsorted.fluids[name] = game.fluid_prototypes[name]
     end
   end
   if fluids then
     for _, f in pairs(fluids) do
       local name = (type(f) == "table" and f.name) or f
       if game.fluid_prototypes[name] then
-        table.insert(prototypes.fluids, game.fluid_prototypes[name])
+        unsorted.fluids[name] = game.fluid_prototypes[name]
       end
     end
   end
 
-  sort_prototypes(prototypes.items)
-  sort_prototypes(prototypes.fluids)
-  return prototypes
+  return {
+    items = sort_prototypes(unsorted.items),
+    fluids = sort_prototypes(unsorted.fluids)
+  }
 end
 
 --############################################################################--
