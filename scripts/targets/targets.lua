@@ -110,7 +110,6 @@ function targets.get_proxy(type, level)
 end
 
 function targets.set_custom_targets(new_targets)
-  log(serpent.block(new_targets))
   if not new_targets then
     global.custom_targets = nil
   else

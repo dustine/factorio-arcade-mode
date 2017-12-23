@@ -9,8 +9,6 @@ base.selection_box = {{-2.0, -0.5}, {2.0, 0.5}}
 base.collision_mask = {"object-layer", "player-layer"}
 base.item_slot_count = 1
 
-log(serpent.block(data.raw["constant-combinator"]["constant-combinator"].sprites))
-
 base.circuit_wire_max_distance = 0
 base.sprites = {
   north = {

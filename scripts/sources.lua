@@ -71,13 +71,10 @@ local function reset(source, fast)
   refresh_display(source)
 end
 
-local function delete(source)
-  reset(source, true)
-  global.sources[source.index] = nil
-end
-
 function sources.delete(entity)
-  delete(sources.get(entity))
+  local source = sources.get(entity)
+  reset(source)
+  global.sources[source.index] = nil
 end
 
 --############################################################################--
@@ -206,9 +203,22 @@ function sources.on_targets_changed(event)
     fluids[f.name] = true
   end
 
+  local deleted = 0
   for _, source in pairs(global.sources) do
     if not source.base.valid then
-      delete(source)
+      local surface = nil
+      for _, c in pairs(source) do
+        if type(c) == "table" and c.valid and c.surface and c.surface.valid then
+          surface = c.surface; break
+        end
+      end
+      if surface then
+        for _, e in pairs(surface.find_entities_filtered{area = source.area}) do
+          if e.valid then e.destroy() end
+        end
+      end
+      global.sources[source.index] = nil
+      deleted = deleted + 1
     elseif source.target and source.target.signal then
       if source.target.signal.type == "item" then
         if not items[source.target.signal.name] then reset(source) end
@@ -217,6 +227,7 @@ function sources.on_targets_changed(event)
       else reset(source) end
     end
   end
+  if deleted > 0 then log("Deleted "..deleted.." invalid sources") end
 end
 
 return sources

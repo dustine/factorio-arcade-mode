@@ -14,8 +14,6 @@ script.on_init(function()
   global.version = version
   silo_script.on_init()
 
-  -- 730116874
-
   -- whitelist, make it into a set
   local whitelist = {"desert", "dirt", "enemy-base", "grass", "sand"}
   local whiteset = {}
@@ -26,6 +24,7 @@ script.on_init(function()
   local surface = game.surfaces.nauvis
   local settings = surface.map_gen_settings
   settings.water = "none"
+  -- settings.seed = 730116874
   settings.cliff_settings.cliff_elevation_0 = 1024
   settings.default_enable_all_autoplace_controls = false
   for name, control in pairs(settings.autoplace_controls) do
@@ -42,7 +41,9 @@ script.on_init(function()
 
   for chunk in surface.get_chunks() do
     if chunk.x >= 0 then surface.delete_chunk(chunk) end
+    -- surface.request_to_generate_chunks(Area.center(Chunk.to_area(chunk)), 1)
   end
+  surface.force_generate_chunk_requests()
   for _, entity in pairs(surface.find_entities()) do entity.destroy() end
   game.forces.player.set_spawn_position({-1,0}, surface.name)
 end)
@@ -80,6 +81,7 @@ script.on_event(defines.events.on_chunk_generated, function(event)
   local surface = event.surface
   if not(surface.valid and surface.name == "nauvis") then return end
 
+  local center = Area.center(event.area)
   local chunk = Chunk.from_position(Area.center(event.area))
 
   local force = game.forces.player
@@ -93,7 +95,11 @@ script.on_event(defines.events.on_chunk_generated, function(event)
       end
     end
     surface.set_tiles(tiles, true)
-  elseif chunk.x * chunk.x + chunk.y * chunk.y <= 400 then
+    return
+  end
+  if not global.left_cleared then return end
+
+  if chunk.x * chunk.x + chunk.y * chunk.y <= 400 then
     -- erase remaining water with dry dirt
     local water_tile_types = {"water", "deepwater", "water-green", "deepwater-green"}
     local water_tiles = {}
@@ -121,9 +127,7 @@ script.on_event(defines.events.on_chunk_generated, function(event)
 
     for y = area.left_top.y, area.left_top.y+31 do
       -- logic for leaving the spawning alcove sourceless
-      if y > 3 or y < -3 then
-        place_source({-2.5, y}, surface, force)
-      end
+      if y > 3 or y < -3 then place_source({-2.5, y}, surface, force) end
     end
   end
 end)
@@ -131,15 +135,10 @@ end)
 --[[others]]
 
 script.on_event(defines.events.on_player_created, function(event)
-  log("player created")
+
   local player = game.players[event.player_index]
   -- fixes death spawn
   player.teleport(player.force.get_spawn_position("nauvis"))
-  -- player.insert{name="iron-plate", count = 8}
-  -- player.insert{name="pistol", count = 1}
-  -- player.insert{name="firearm-magazine", count = 10}
-  -- player.insert{name="stone-furnace", count = 1}
-  -- player.insert{name="arcade_mode-source", count = 10}
 
   if (#game.players <= 1) then
     game.show_message_dialog{text = {"msg-intro"}}
@@ -162,4 +161,11 @@ end)
 
 script.on_event(defines.events.on_rocket_launched, function(event)
   silo_script.on_rocket_launched(event)
+end)
+
+script.on_event(defines.events.on_tick, function()
+  script.on_event(defines.events.on_tick, function()
+    global.left_cleared = true
+    script.on_event(defines.events.on_tick, nil)
+  end)
 end)
