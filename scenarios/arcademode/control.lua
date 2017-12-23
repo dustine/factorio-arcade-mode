@@ -11,13 +11,10 @@ silo_script.add_remote_interface()
 silo_script.add_commands()
 
 script.on_init(function()
-  log("init")
-
   global.version = version
   silo_script.on_init()
 
   -- 730116874
-  -- 3362467784
 
   -- whitelist, make it into a set
   local whitelist = {"desert", "dirt", "enemy-base", "grass", "sand"}
@@ -46,7 +43,7 @@ script.on_init(function()
   for chunk in surface.get_chunks() do
     if chunk.x >= 0 then surface.delete_chunk(chunk) end
   end
-
+  for _, entity in pairs(surface.find_entities()) do entity.destroy() end
   game.forces.player.set_spawn_position({-1,0}, surface.name)
 end)
 
@@ -79,70 +76,54 @@ local function place_source(position, surface, force)
   script.raise_event(defines.events.script_raised_built, {entity = source})
 end
 
-local function should_place_source(y)
-  return y > 3 or y < -3
-end
-
 script.on_event(defines.events.on_chunk_generated, function(event)
   local surface = event.surface
   if not(surface.valid and surface.name == "nauvis") then return end
 
   local chunk = Chunk.from_position(Area.center(event.area))
+
   local force = game.forces.player
-  local area = Area.shrink(event.area, 0.5)
 
   if chunk.x < 0 then
-    -- void-containing chunk
+    -- add The Void to leftmost chunks
     local tiles = {}
-    for x,y in Area.iterate(area) do
-      local name = get_edge_type_type(x,y)
-      if name then
-        table.insert(tiles, {
-          position = Position.construct(x, y),
-          name = name
-        })
+    for x,y in Area.iterate(event.area) do
+      if x < -4 then
+        table.insert(tiles, {position = {x, y}, name = "out-of-map"})
       end
     end
-    surface.set_tiles(tiles)
-
-    if chunk.x == -1 then
-      -- add sources
-      for _, entity in pairs(event.surface.find_entities(area)) do
-        if entity.valid and entity.type ~= "player" then entity.destroy() end
-      end
-
-      for y = area.left_top.y, area.left_top.y+31 do
-        -- logic for leaving the spawning alcove
-        if should_place_source(y) then
-          place_source({-2.5, y}, surface, force)
-        end
-      end
-    end
+    surface.set_tiles(tiles, true)
   elseif chunk.x * chunk.x + chunk.y * chunk.y <= 400 then
-    -- erase water with dry dirt
+    -- erase remaining water with dry dirt
     local water_tile_types = {"water", "deepwater", "water-green", "deepwater-green"}
     local water_tiles = {}
-    local deleted_sources = {}
     for _, water in pairs(water_tile_types) do
       for _, t in pairs(event.surface.find_tiles_filtered {name = water}) do
-        local x = t.position.x+0.5
-        local y = t.position.y+0.5
-
-        if x < 0 and should_place_source(y) then
-          deleted_sources[y] = true
-        end
-
-        table.insert(water_tiles, {
-          name = get_edge_type_type(x, y) or "dry-dirt",
-          position = t.position
-        })
+        table.insert(water_tiles, {name = "dry-dirt", position = t.position})
       end
     end
     surface.set_tiles(water_tiles)
+  end
 
-    -- place any sources deleted by the water
-    for y, _ in pairs(deleted_sources) do
-      place_source({-2.5, y}, surface, force)
+  if chunk.x == 0 then
+    -- place the border... from the leftwards chunk!
+    local tiles = {}
+    local area = Area.tile_center_points(event.area)
+    area = Area.construct(area.left_top.x-4, area.left_top.y, area.left_top.x, area.right_bottom.y)
+
+    for x,y in Area.iterate(area) do
+      table.insert(tiles, {
+        position = {x, y},
+        name = get_edge_type_type(x, y) or surface.get_tile({0.5, y}).name
+      })
+    end
+    surface.set_tiles(tiles)
+
+    for y = area.left_top.y, area.left_top.y+31 do
+      -- logic for leaving the spawning alcove sourceless
+      if y > 3 or y < -3 then
+        place_source({-2.5, y}, surface, force)
+      end
     end
   end
 end)
@@ -150,13 +131,14 @@ end)
 --[[others]]
 
 script.on_event(defines.events.on_player_created, function(event)
+  log("player created")
   local player = game.players[event.player_index]
   -- fixes death spawn
   player.teleport(player.force.get_spawn_position("nauvis"))
-  player.insert{name="iron-plate", count = 8}
-  player.insert{name="pistol", count = 1}
-  player.insert{name="firearm-magazine", count = 10}
-  player.insert{name="stone-furnace", count = 1}
+  -- player.insert{name="iron-plate", count = 8}
+  -- player.insert{name="pistol", count = 1}
+  -- player.insert{name="firearm-magazine", count = 10}
+  -- player.insert{name="stone-furnace", count = 1}
   -- player.insert{name="arcade_mode-source", count = 10}
 
   if (#game.players <= 1) then
