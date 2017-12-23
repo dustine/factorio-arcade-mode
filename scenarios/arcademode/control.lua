@@ -81,7 +81,6 @@ script.on_event(defines.events.on_chunk_generated, function(event)
   local surface = event.surface
   if not(surface.valid and surface.name == "nauvis") then return end
 
-  local center = Area.center(event.area)
   local chunk = Chunk.from_position(Area.center(event.area))
 
   local force = game.forces.player
@@ -90,9 +89,10 @@ script.on_event(defines.events.on_chunk_generated, function(event)
     -- add The Void to leftmost chunks
     local tiles = {}
     for x,y in Area.iterate(event.area) do
-      if x < -4 then
-        table.insert(tiles, {position = {x, y}, name = "out-of-map"})
-      end
+      table.insert(tiles, {
+        position = {x, y},
+        name = get_edge_type_type(x,y) or "concrete"
+      })
     end
     surface.set_tiles(tiles, true)
     return
