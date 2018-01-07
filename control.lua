@@ -7,8 +7,11 @@ MOD.events = {}
 -- MOD.config = require "control.config"
 
 require "stdlib/utils/table"
+-- local Event = require "stdlib/event/event"
+
 local targets = require "scripts/targets/targets"
 local sources = require "scripts/sources"
+local gui_counter = require "scripts/gui-counter"
 local gui_sources = require "scripts/gui-sources"
 local gui_targets = require "scripts/gui-targets"
 
@@ -31,6 +34,10 @@ local function init_force(force)
     }
   }
 end
+
+--############################################################################--
+--                                   EVENTS                                   --
+--############################################################################--
 
 script.on_event(defines.events.on_research_finished, function(event)
   local force = event.research.force.name
@@ -83,17 +90,14 @@ script.on_event(defines.events.on_force_created, function(event)
   init_force(event.force)
 end)
 
---############################################################################--
+--------------------------------------------------------------------------------
 --                                    GUI                                     --
---############################################################################--
+--------------------------------------------------------------------------------
 
-script.on_event(defines.events.on_gui_opened, function(event)
-  if event.entity and event.entity.name == "arcade_mode-source" then
-    gui_sources.on_opened(event.entity, game.players[event.player_index])
-  end
-end)
+script.on_event(defines.events.on_gui_opened, gui_sources.on_opened)
 
 script.on_event(defines.events.on_gui_click, function(event)
+  gui_counter.on_click(event)
   gui_sources.on_click(event)
   gui_targets.on_click(event)
 end)
@@ -103,9 +107,7 @@ script.on_event(defines.events.on_gui_closed, function(event)
   gui_targets.on_closed(event)
 end)
 
-script.on_event(defines.events.on_gui_elem_changed, function(event)
-  gui_targets.on_elem_changed(event)
-end)
+script.on_event(defines.events.on_gui_elem_changed, gui_targets.on_elem_changed)
 
 --############################################################################--
 --                                 INTERFACES                                 --
@@ -118,6 +120,7 @@ script.on_init(function()
 
   targets.on_init()
   sources.on_init()
+  gui_counter.on_init()
   gui_sources.on_init()
   gui_targets.on_init()
 end)

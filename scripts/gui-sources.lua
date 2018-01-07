@@ -67,16 +67,16 @@ local function on_gui_pick(source, player)
     make_smart_slot(resources, name.."-select-fluid/"..fluid.name, {name = fluid.name, type="fluid"}, "recipe_slot_button")
   end
 
-  local define = pick.add {
-    type = "button",
-    name = name.."-define",
-    caption = {"gui-caption.arcade_mode-pick-define"},
-    style = "slot_with_filter_button"
-  }
-  define.style.minimal_width = 32*6+2*5
-  define.style.horizontally_stretchable = true
-  define.style.horizontally_squashable = true
-  define.style.visible = player.admin
+  -- local define = pick.add {
+  --   type = "button",
+  --   name = name.."-define",
+  --   caption = {"gui-caption.arcade_mode-pick-define"},
+  --   style = "slot_with_filter_button"
+  -- }
+  -- define.style.minimal_width = 32*6+2*5
+  -- define.style.horizontally_stretchable = true
+  -- define.style.horizontally_squashable = true
+  -- define.style.visible = player.admin
 
   player.opened = pick
 end
@@ -223,7 +223,11 @@ end
 --                                   EVENTS                                   --
 --############################################################################--
 
-function gui.on_opened(entity, player)
+function gui.on_opened(event)
+  local entity = event.entity
+  if not(event.entity and event.entity.name == "arcade_mode-source") then return end
+
+  local player = game.players[event.player_index]
   if not (player and player.valid) then return end
 
   local source = sources.get(entity)

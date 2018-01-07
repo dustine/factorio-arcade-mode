@@ -3,8 +3,8 @@ local targets = require "scripts/targets/targets"
 local gui = {}
 
 -- gui.version = 1
-gui.name = "arcade_mode-gui_targets"
-gui.name_pattern = "arcade_mode%-gui_targets"
+gui.name = "arcade_mode-gui_defines"
+gui.name_pattern = "arcade_mode%-gui_defines"
 
 -- TODO: refactor this to common as both gui files use this
 local function make_smart_slot(parent, name, signal, style)
@@ -18,7 +18,7 @@ local function make_smart_slot(parent, name, signal, style)
   rate.elem_value = signal
 end
 
-local function update_gui_define(player, override)
+local function update_gui(player, override)
   local info = global.temp_targets[player.index]
 
   if override then
@@ -31,7 +31,7 @@ local function update_gui_define(player, override)
     end
   end
 
-  local name = gui.name.."-define"
+  local name = gui.name
   local resources_table = player.gui.center[name][name.."-resources"]
   resources_table.clear()
 
@@ -43,19 +43,19 @@ local function update_gui_define(player, override)
   player.gui.center[name][name.."-options"][name.."-reset"].enabled = not info.reset
 end
 
-local function reset_gui_define(player)
+local function reset_gui(player)
   global.temp_targets[player.index] = {
     resources = {},
     reset = true
   }
 
-  update_gui_define(player, targets.get(true))
+  update_gui(player, targets.get(true))
 end
 
-local function on_gui_define(player)
+local function on_gui(player)
   if not(player and player.valid and player.admin) then return end
 
-  local name = gui.name.."-define"
+  local name = gui.name
   if player.gui.center[name] then
     player.gui.center[name].destroy()
     global.open_sources[player.index] = nil
@@ -67,22 +67,22 @@ local function on_gui_define(player)
     reset = global.custom_targets == nil
   }
 
-  local define = player.gui.center.add {
+  local main = player.gui.center.add {
     type = "frame",
     name = name,
-    caption = {"gui-caption.arcade_mode-define"},
+    caption = {"gui-caption.arcade_mode-targets"},
     direction = "vertical"
   }
-  define.style.align = "center"
+  main.style.align = "center"
 
-  define.add {
+  main.add {
     type = "table",
     name = name.."-resources",
     column_count = 6,
     style = "slot_table"
   }
 
-  local options = define.add {
+  local options = main.add {
     type = "table",
     name = name.."-options",
     column_count = 2
@@ -93,7 +93,7 @@ local function on_gui_define(player)
   options.add {
     type = "sprite-button",
     name = name.."-reset",
-    tooltip = {"gui-caption.arcade_mode-define-reset"},
+    tooltip = {"gui-caption.arcade_mode-targets-reset"},
     sprite = "utility/reset",
     style = "not_available_slot_button"
   }
@@ -101,15 +101,15 @@ local function on_gui_define(player)
   local save = options.add {
     type = "button",
     name = name.."-save",
-    caption = {"gui-caption.arcade_mode-define-save"},
+    caption = {"gui-caption.arcade_mode-targets-save"},
     style = "slot_with_filter_button"
   }
   save.style.minimal_width = 32*5 + 2*5 - 3
   save.style.horizontally_stretchable = true
   save.style.horizontally_squashable = true
 
-  update_gui_define(player, global.targets)
-  player.opened = define
+  update_gui(player, global.targets)
+  player.opened = main
 end
 
 --############################################################################--
@@ -122,22 +122,22 @@ function gui.on_click(event)
 
   local element = event.element
   if not(element.valid) then return end
-  if element.name == "arcade_mode-gui_sources-pick-define" then
-    -- gui-sources opens this gui remotely
-    -- TODO: find a better way. event?
-    on_gui_define(player)
-    return
-  end
+  -- if element.name == "arcade_mode-gui_sources-pick-define" then
+  --   -- gui-sources opens this gui remotely
+  --   -- TODO: find a better way. event?
+  --   on_gui(player)
+  --   return
+  -- end
   if not element.name:match(gui.name_pattern) then return end
 
   local info = global.temp_targets[player.index]
 
-  if element.name:match("%-define%-reset$") then
-    reset_gui_define(player)
-  elseif element.name:match("%-define%-save$") then
+  if element.name:match("%-reset$") then
+    reset_gui(player)
+  elseif element.name:match("%-save$") then
     if info.reset then targets.set_custom_targets()
     else targets.set_custom_targets(info.resources) end
-    update_gui_define(player, targets.get())
+    update_gui(player, targets.get())
   end
 end
 
@@ -147,7 +147,7 @@ function gui.on_elem_changed(event)
 
   local element = event.element
   if not element.valid then return end
-  local index = tonumber(element.name:match(gui.name_pattern.."%-define%-filter%-(%d+)$"))
+  local index = tonumber(element.name:match(gui.name_pattern.."%-filter%-(%d+)$"))
   if not index then return end
 
   local info = global.temp_targets[player.index]
@@ -178,7 +178,7 @@ function gui.on_elem_changed(event)
     end
   end
 
-  update_gui_define(player)
+  update_gui(player)
 end
 
 function gui.on_closed(event)
@@ -197,7 +197,7 @@ function gui.on_configuration_changed()
 end
 
 MOD.commands.arcmd_set_targets = function(event)
-  on_gui_define(game.players[event.player_index])
+  on_gui(game.players[event.player_index])
 end
 
 return gui

@@ -232,7 +232,7 @@ data:extend {{
 }}
 
 make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack", "high-tech-science-pack"}, "5*L", 249)
-make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack", "high-tech-science-pack", "space-science-pack"}, "2*L", "infinite")
+make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack", "high-tech-science-pack", "space-science-pack"}, "1.75*(L-1)", "infinite")
 
 --[[
   {"science-pack-1", 1},
