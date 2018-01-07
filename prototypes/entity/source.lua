@@ -4,7 +4,7 @@ local base = table.deepcopy(data.raw["constant-combinator"]["constant-combinator
 base.name = "arcade_mode-source"
 base.icon = "__ArcadeMode__/graphics/entity/source/icon-item.png"
 base.minable = {mining_time = 1, result = "arcade_mode-source"}
-base.collision_box = {{-1.8, -0.4}, {1.8, 0.4}}
+base.collision_box = {{-1.9, -0.4}, {1.9, 0.4}}
 base.selection_box = {{-2.0, -0.5}, {2.0, 0.5}}
 base.collision_mask = {"object-layer", "player-layer"}
 base.item_slot_count = 1

@@ -2,6 +2,8 @@
 
 local targets = require("scripts/targets/targets")
 
+local use_charges = MOD.interfaces.use_charges
+
 local sources = {}
 
 --############################################################################--
@@ -41,11 +43,6 @@ local function get_cost(source, target)
   return ((target and target.count) or 0) - ((source.target and source.target.count) or 0)
 end
 
-local function set_cost(source, target)
-  local limit = global.limits[source.base.force.name]
-  limit.counter = limit.counter - get_cost(source, target)
-end
-
 local function refresh_display(source)
   local control = source.base.get_or_create_control_behavior()
   control.set_signal(1, (source.target.signal and source.target) or nil)
@@ -60,10 +57,12 @@ local function reset(source, fast)
   for _, e in pairs(source.base.surface.find_entities_filtered {
     area = source.area
   }) do
+    log (e.name)
     if e.valid and e.name ~= "arcade_mode-source" then e.destroy() end
   end
 
-  set_cost(source)
+  use_charges(source.base.force.name, get_cost(source))
+
   if fast then return end
   source.base.direction = 0
   source.free = nil
@@ -73,7 +72,7 @@ end
 
 function sources.delete(entity)
   local source = sources.get(entity)
-  reset(source)
+  reset(source, true)
   global.sources[source.index] = nil
 end
 
@@ -128,17 +127,18 @@ local function set_item(source, target)
   belt.minable = false
   source.belt = belt
 
-  set_cost(source, target)
+  use_charges(force.name, get_cost(source, target))
   source.target = target
 end
 
 local function set_fluid(source, target)
+  local force = source.base.force
   if source.pump then source.pump.destroy(); source.pump = nil end
 
   local pump = source.base.surface.create_entity {
     name = "arcade_mode-source_fluid-".. target.signal.name,
     position = offset_pos(source.base, 2),
-    force = source.base.force,
+    force = force,
   }
   pump.destructible = false
   source.pump = pump
@@ -149,15 +149,15 @@ local function set_fluid(source, target)
     amount = pump.fluidbox.get_capacity(1),
   }
 
-  set_cost(source, target)
+  use_charges(force.name, get_cost(source, target))
   source.target = target
 end
 
 function sources.set_target(entity, player, target)
   local source = global.sources[entity.unit_number]
+  local force = source.base.force.name
 
-  if not(player and player.cheat_mode) and get_cost(source, target) > global.limits[source.base.force.name].counter then return false end
-
+  if not(player and player.cheat_mode) and not use_charges(force, get_cost(source, target), true) then return false end
   reset(source)
 
   if target and target.signal then

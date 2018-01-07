@@ -4,6 +4,7 @@ local targets = {}
 local vanilla = require "vanilla"
 
 MOD.events.on_targets_changed = script.generate_event_name()
+MOD.interfaces.targets_changed_id = function() return MOD.events.on_targets_changed end
 
 --############################################################################--
 --                                   LOGIC                                    --

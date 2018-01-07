@@ -23,7 +23,7 @@ local function make_smart_slot(parent, name, signal, style)
 end
 
 local function on_gui_pick(source, player)
-  local counter = global.limits[source.base.force.name].counter
+  local counter = global.charges[source.base.force.name]
 
   if not(player.cheat_mode) and counter <= 0 then
     player.surface.create_entity {
@@ -82,10 +82,10 @@ local function on_gui_pick(source, player)
 end
 
 
-local function get_counter_info(player)
+local function get_counter_info(source, player)
   if player.cheat_mode then return "∞", "bold_blue_label" end
 
-  local counter = global.limits[player.force.name].counter
+  local counter = global.charges[source.base.force.name]
   if counter <= 0 then return counter, "bold_red_label"
   else return counter, "caption_label" end
 end
@@ -99,10 +99,10 @@ local function update_gui_main(source, player)
   local main = player.gui.center[name]
   if not main then return end
 
-  main.caption = (source.free and {"entity-name.arcade_mode-source_free"}) or{"entity-name.arcade_mode-source"}
+  main.caption = (source.free and {"entity-name.arcade_mode-source_free"}) or {"entity-name.arcade_mode-source"}
 
   local counter = main[name.."-flow"][name.."-settings"][name.."-counter"]
-  local counter_n, counter_style = get_counter_info(player)
+  local counter_n, counter_style = get_counter_info(source, player)
 
   counter.caption = {"gui-caption.arcade_mode-main-counter", counter_n}
   counter.style = counter_style
@@ -114,7 +114,8 @@ local function update_gui_main(source, player)
     name = targets.get_proxy(type, source.target.count)
   })
   rate[name.."-rate-minus"].enabled = source.target.count > 1
-  rate[name.."-rate-plus"].enabled = type and (source.target.count < global.limits[player.force.name].speed[type])
+  rate[name.."-rate-plus"].enabled = type and
+    (source.target.count < global.limits[source.base.force.name].speed[type])
 end
 
 local function on_gui_main(source, player)
