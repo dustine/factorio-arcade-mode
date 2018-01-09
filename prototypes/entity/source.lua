@@ -198,7 +198,7 @@ data:extend {{
     },
     time = 60
   },
-  prerequisites = {"arcade_mode-unlock-2", "logistics-2"},
+  prerequisites = {"logistics-2"},
   effects = {{
     type = "nothing",
     effect_description = {"technology-effect.arcade_mode-upgrade", {"entity-name.fast-transport-belt"}}
@@ -223,7 +223,7 @@ data:extend {{
     },
     time = 60
   },
-  prerequisites = {"arcade_mode-unlock-50", "arcade_mode-upgrade-1", "logistics-3"},
+  prerequisites = {"arcade_mode-upgrade-1", "logistics-3"},
   effects = {{
     type = "nothing",
     effect_description = {"technology-effect.arcade_mode-upgrade", {"entity-name.express-transport-belt"}}
