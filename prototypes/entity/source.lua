@@ -184,6 +184,22 @@ end
 
 make_unlock({"science-pack-1"}, "240", 1)
 make_unlock({"science-pack-1", "science-pack-2"}, "80*L", 7)
+make_unlock({"science-pack-1", "science-pack-2", "science-pack-3"}, "20*L", 49)
+make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack"}, "10*L", 99)
+make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack", "high-tech-science-pack"}, "5*L", 249)
+make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack", "high-tech-science-pack", "space-science-pack"}, "1.75*(L-1)", "infinite")
+
+--[[
+  {"science-pack-1", 1},
+  {"science-pack-2", 1},
+  {"science-pack-3", 1},
+  {"military-science-pack", 1},
+  {"production-science-pack", 1},
+  {"high-tech-science-pack", 1},
+  {"space-science-pack", 1},
+
+  time = 20, 30, 60
+]]
 
 data:extend {{
   type = "technology",
@@ -203,12 +219,7 @@ data:extend {{
     type = "nothing",
     effect_description = {"technology-effect.arcade_mode-upgrade", {"entity-name.fast-transport-belt"}}
   }}
-}}
-
-make_unlock({"science-pack-1", "science-pack-2", "science-pack-3"}, "20*L", 49)
-make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack"}, "10*L", 99)
-
-data:extend {{
+},{
   type = "technology",
   name = "arcade_mode-upgrade-2",
   icon = "__ArcadeMode__/graphics/entity/source/upgrade-2.png",
@@ -230,18 +241,3 @@ data:extend {{
   }},
   upgrade = true
 }}
-
-make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack", "high-tech-science-pack"}, "5*L", 249)
-make_unlock({"science-pack-1", "science-pack-2", "science-pack-3", "production-science-pack", "high-tech-science-pack", "space-science-pack"}, "1.75*(L-1)", "infinite")
-
---[[
-  {"science-pack-1", 1},
-  {"science-pack-2", 1},
-  {"science-pack-3", 1},
-  {"military-science-pack", 1},
-  {"production-science-pack", 1},
-  {"high-tech-science-pack", 1},
-  {"space-science-pack", 1},
-
-  time = 20, 30, 60
-]]
