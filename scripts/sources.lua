@@ -57,8 +57,10 @@ local function reset(source, fast)
   for _, e in pairs(source.base.surface.find_entities_filtered {
     area = source.area
   }) do
-    log (e.name)
-    if e.valid and e.name ~= "arcade_mode-source" then e.destroy() end
+    if e.valid and e.name ~= "arcade_mode-source" then
+      e.clear_items_inside()
+      e.destroy()
+    end
   end
 
   use_charges(source.base.force.name, get_cost(source))

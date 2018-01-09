@@ -1,4 +1,4 @@
-local Position = require('stdlib/area/position')
+-- local Position = require('stdlib/area/position')
 local Chunk = require('stdlib/area/chunk')
 local Area = require('stdlib/area/area')
 
@@ -39,12 +39,18 @@ script.on_init(function()
   end
   surface.map_gen_settings = settings
 
-  for chunk in surface.get_chunks() do
-    if chunk.x >= 0 then surface.delete_chunk(chunk) end
-    -- surface.request_to_generate_chunks(Area.center(Chunk.to_area(chunk)), 1)
-  end
+  log(string.format("Seed: %d", settings.seed))
+
   surface.force_generate_chunk_requests()
-  for _, entity in pairs(surface.find_entities()) do entity.destroy() end
+  for _, entity in pairs(surface.find_entities()) do if entity.valid then
+    if entity.type == "player" then goto skip end
+    if entity.force.name == "enemy" then goto skip end
+    if entity.name:match("^arcade_mode") then goto skip end
+    if entity.name:match("rock") then goto skip end
+    entity.destroy()
+    ::skip::
+  end end
+
   game.forces.player.set_spawn_position({-1,0}, surface.name)
 end)
 
@@ -82,60 +88,50 @@ script.on_event(defines.events.on_chunk_generated, function(event)
   if not(surface.valid and surface.name == "nauvis") then return end
 
   local chunk = Chunk.from_position(Area.center(event.area))
-
+  -- don't trust the event's area
+  local area = Area.tile_center_points(Chunk.to_area(chunk))
   local force = game.forces.player
+
+  -- log(string.format("created %s chunk", serpent.line(chunk)))
+
+  local water_tile_types = {"water", "deepwater", "water-green", "deepwater-green"}
+  local water_tiles = {}
+  for _, water in pairs(water_tile_types) do
+    for _, t in pairs(event.surface.find_tiles_filtered {name = water}) do
+      table.insert(water_tiles, {name = "dry-dirt", position = t.position})
+    end
+  end
+  surface.set_tiles(water_tiles)
 
   if chunk.x < 0 then
     -- add The Void to leftmost chunks
     local tiles = {}
-    for x,y in Area.iterate(event.area) do
-      table.insert(tiles, {
-        position = {x, y},
-        name = get_edge_type_type(x,y) or "concrete"
-      })
-    end
-    surface.set_tiles(tiles, true)
-    return
-  end
-  if not global.left_cleared then return end
-
-  if chunk.x * chunk.x + chunk.y * chunk.y <= 400 then
-    -- erase remaining water with dry dirt
-    local water_tile_types = {"water", "deepwater", "water-green", "deepwater-green"}
-    local water_tiles = {}
-    for _, water in pairs(water_tile_types) do
-      for _, t in pairs(event.surface.find_tiles_filtered {name = water}) do
-        table.insert(water_tiles, {name = "dry-dirt", position = t.position})
+    for x,y in Area.iterate(area) do
+      local tile = get_edge_type_type(x,y)
+      if tile then
+        table.insert(tiles, {
+          position = {x, y},
+          name = get_edge_type_type(x,y)
+        })
       end
     end
-    surface.set_tiles(water_tiles)
-  end
+    surface.set_tiles(tiles, true)
 
-  if chunk.x == 0 then
-    -- place the border... from the leftwards chunk!
-    local tiles = {}
-    local area = Area.tile_center_points(event.area)
-    area = Area.construct(area.left_top.x-4, area.left_top.y, area.left_top.x, area.right_bottom.y)
-
-    for x,y in Area.iterate(area) do
-      table.insert(tiles, {
-        position = {x, y},
-        name = get_edge_type_type(x, y) or surface.get_tile({0.5, y}).name
-      })
+    if chunk.x == -1 then
+      for y = area.left_top.y, area.right_bottom.y do
+        -- logic for leaving the spawning alcove sourceless
+        if y > 3 or y < -3 then place_source({-2.5, y}, surface, force) end
+      end
     end
-    surface.set_tiles(tiles)
 
-    for y = area.left_top.y, area.left_top.y+31 do
-      -- logic for leaving the spawning alcove sourceless
-      if y > 3 or y < -3 then place_source({-2.5, y}, surface, force) end
-    end
+    surface.set_chunk_generated_status(chunk, defines.chunk_generated_status.entities)
+    return
   end
 end)
 
 --[[others]]
 
 script.on_event(defines.events.on_player_created, function(event)
-
   local player = game.players[event.player_index]
   -- fixes death spawn
   player.teleport(player.force.get_spawn_position("nauvis"))
@@ -163,9 +159,9 @@ script.on_event(defines.events.on_rocket_launched, function(event)
   silo_script.on_rocket_launched(event)
 end)
 
-script.on_event(defines.events.on_tick, function()
-  script.on_event(defines.events.on_tick, function()
-    global.left_cleared = true
-    script.on_event(defines.events.on_tick, nil)
-  end)
-end)
+-- script.on_event(defines.events.on_tick, function()
+--   script.on_event(defines.events.on_tick, function()
+--     global.left_cleared = true
+--     script.on_event(defines.events.on_tick, nil)
+--   end)
+-- end)

@@ -110,8 +110,12 @@ MOD.commands.arcmd_charges = function(event)
   local player = game.players[event.player_index]
   local number = tonumber(event.parameter)
 
-  if number and player.admin then set_charges_limit(player.force, number)
-  else player.print(get_charges(player.force)) end
+  if number and player.admin then
+    set_charges_limit(player.force.name, number)
+    player.print({"status.arcmd_charges-set", player.force.name, get_charges(player.force.name)}, {r=0.5, g=0.8, b=1})
+  else
+    player.print({"status.arcmd_charges-report", player.force.name, get_charges(player.force.name)}, {r=0.5, g=0.8, b=1})
+  end
 end
 
 --############################################################################--
@@ -122,7 +126,7 @@ local targets = require "scripts/targets/targets"
 local sources = require "scripts/sources"
 local gui_counter = require "scripts/gui-counter"
 local gui_sources = require "scripts/gui-sources"
-local gui_targets = require "scripts/gui-targets"
+local gui_define = require "scripts/gui-define"
 
 
 script.on_event(defines.events.on_research_finished, function(event)
@@ -185,15 +189,15 @@ script.on_event(defines.events.on_gui_opened, gui_sources.on_opened)
 script.on_event(defines.events.on_gui_click, function(event)
   gui_counter.on_click(event)
   gui_sources.on_click(event)
-  gui_targets.on_click(event)
+  gui_define.on_click(event)
 end)
 
 script.on_event(defines.events.on_gui_closed, function(event)
   gui_sources.on_closed(event)
-  gui_targets.on_closed(event)
+  gui_define.on_closed(event)
 end)
 
-script.on_event(defines.events.on_gui_elem_changed, gui_targets.on_elem_changed)
+script.on_event(defines.events.on_gui_elem_changed, gui_define.on_elem_changed)
 
 script.on_event(defines.events.on_player_changed_force, gui_counter.on_player_changed_force)
 
@@ -216,7 +220,7 @@ script.on_init(function()
   sources.on_init()
   gui_counter.on_init()
   gui_sources.on_init()
-  gui_targets.on_init()
+  gui_define.on_init()
 end)
 
 script.on_configuration_changed(function()

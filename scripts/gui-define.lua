@@ -3,8 +3,8 @@ local targets = require "scripts/targets/targets"
 local gui = {}
 
 -- gui.version = 1
-gui.name = "arcade_mode-gui_defines"
-gui.name_pattern = "arcade_mode%-gui_defines"
+gui.name = "arcade_mode-gui_define"
+gui.name_pattern = "arcade_mode%-gui_define"
 
 -- TODO: refactor this to common as both gui files use this
 local function make_smart_slot(parent, name, signal, style)
@@ -70,7 +70,7 @@ local function on_gui(player)
   local main = player.gui.center.add {
     type = "frame",
     name = name,
-    caption = {"gui-caption.arcade_mode-targets"},
+    caption = {"gui-caption.arcade_mode-define"},
     direction = "vertical"
   }
   main.style.align = "center"
@@ -93,7 +93,7 @@ local function on_gui(player)
   options.add {
     type = "sprite-button",
     name = name.."-reset",
-    tooltip = {"gui-caption.arcade_mode-targets-reset"},
+    tooltip = {"gui-caption.arcade_mode-define-reset"},
     sprite = "utility/reset",
     style = "not_available_slot_button"
   }
@@ -101,10 +101,10 @@ local function on_gui(player)
   local save = options.add {
     type = "button",
     name = name.."-save",
-    caption = {"gui-caption.arcade_mode-targets-save"},
+    caption = {"gui-caption.arcade_mode-define-save"},
     style = "slot_with_filter_button"
   }
-  save.style.minimal_width = 32*5 + 2*5 - 3
+  save.style.width = 36*5 + 2*4
   save.style.horizontally_stretchable = true
   save.style.horizontally_squashable = true
 
@@ -152,28 +152,12 @@ function gui.on_elem_changed(event)
 
   local info = global.temp_targets[player.index]
   if not element.elem_value then
-    -- cleared a slot
-    -- local elem = element
-    -- for i = index, #info.resources do
-    --   local new_elem = element.parent[gui.name.."-define-filter-"..(i+1)]
-    --   elem.elem_value = new_elem.elem_value
-    --   elem = new_elem
-    -- end
-
     table.remove(info.resources, index)
-    -- elem.destroy()
     info.reset = false
   else
     -- set a slot
-    if element.elem_value.type ~= "item" and element.elem_value.type ~= "fluid" then
-      -- invalid signal, revert to previous value
-      -- element.elem_value = info.resources[index]
-    else
+    if not(element.elem_value.type == "item" or element.elem_value.type == "fluid") then
       info.resources[index] = element.elem_value
-      -- if index >= #info.resources then
-      --   -- last slot, add an extra one
-      --   make_smart_slot(element.parent, gui.name.."-define-filter-"..(#info.resources+1))
-      -- end
       info.reset = false
     end
   end
@@ -196,7 +180,7 @@ end
 function gui.on_configuration_changed()
 end
 
-MOD.commands.arcmd_set_targets = function(event)
+MOD.commands.arcmd_define = function(event)
   on_gui(game.players[event.player_index])
 end
 
